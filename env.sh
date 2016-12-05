@@ -40,6 +40,7 @@ SRCS="
     provider_audio_only.cpp
     provider_audio_transcriber.cpp
     provider_factory.cpp
+    provider_image_blob.cpp
     provider_image_boundingbox.cpp
     provider_image_classifier.cpp
     provider_image_localization.cpp

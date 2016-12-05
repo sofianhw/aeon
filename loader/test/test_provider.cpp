@@ -219,3 +219,65 @@ TEST(provider, blob)
         ASSERT_FLOAT_EQ(target_data[i], fp[i]);
     }
 }
+
+TEST(provider, image_blob)
+{
+    nlohmann::json js = {{"type","image,blob"},
+                         {"image", {
+                            {"height",360},
+                            {"width",480},
+                            {"channel_major",false}
+                         }},
+                         {"blob", {
+                              {"output_type","int32_t"},
+                              {"output_count",5}
+                          }
+                         }};
+
+    vector<char> input_data  = file_util::read_file_contents(CURDIR"/test_data/img_2112_70.jpg");
+    auto mat = cv::imdecode(input_data,CV_LOAD_IMAGE_COLOR);
+    cv::Size image_size = mat.size();
+
+    // generate blob data, same size as image
+    vector<int> target_data{5};
+    iota(target_data.begin(), target_data.end(), 0);
+    vector<char> target_cdata;
+    char* p = (char*)target_data.data();
+    for(int i=0; i<target_data.size()*sizeof(int); i++)
+    {
+        target_cdata.push_back(*p++);
+    }
+
+    // setup input and output buffers
+    auto media = nervana::provider_factory::create(js);
+    const vector<nervana::shape_type>& oshapes = media->get_oshapes();
+
+    ASSERT_EQ(360,     int(js["image"]["height"]));
+    ASSERT_EQ(480,     int(js["image"]["width"]));
+    ASSERT_EQ(5,       int(js["blob"]["output_count"]));
+    ASSERT_EQ(2,       oshapes.size());
+
+    size_t data_size   = oshapes[0].get_byte_size();
+    size_t blob_size   = oshapes[1].get_byte_size();
+    ASSERT_EQ(image_size.area()*3,data_size);
+    ASSERT_EQ(5*sizeof(int),blob_size);
+
+    size_t batch_size = 1;
+
+    buffer_out_array out_buf({data_size, blob_size}, batch_size);
+    buffer_in_array  in_buf(2);
+    in_buf[0]->add_item(input_data);
+    in_buf[1]->add_item(target_cdata);
+
+    // call the provider
+    media->provide(0, in_buf, out_buf);
+
+    cv::Mat output_image{image_size, CV_8UC3, out_buf[0]->data()};
+    EXPECT_EQ(image_size, output_image.size());
+
+    int* fp = (int*)out_buf[1]->data();
+    for(int i=0; i<target_data.size(); i++)
+    {
+        ASSERT_FLOAT_EQ(target_data[i], fp[i]);
+    }
+}

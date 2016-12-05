@@ -25,6 +25,7 @@
 #include "provider_video_classifier.hpp"
 #include "provider_video_only.hpp"
 #include "provider_image_stereo.hpp"
+#include "provider_image_blob.hpp"
 
 #include <sstream>
 
@@ -40,6 +41,8 @@ std::shared_ptr<nervana::provider_interface> nervana::provider_factory::create(n
 
     if( mediaType == "image,label" ) {
         rc = make_shared<image_classifier>(configJs);
+    } else if( mediaType == "image,blob" ) {
+        rc = make_shared<image_blob>(configJs);
     } else if( mediaType == "image" ) {
         rc = make_shared<image_only>(configJs);
     } else if( mediaType == "audio,transcription" ) {
