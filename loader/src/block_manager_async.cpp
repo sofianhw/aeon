@@ -32,6 +32,7 @@ nervana::block_manager_async::block_manager_async(block_loader_source_async* fil
     , m_file_loader{*file_loader}
     , m_block_size{m_file_loader.block_size()}
     , m_block_count{m_file_loader.block_count()}
+    , m_record_count{m_file_loader.record_count()}
     , m_current_block_number{0}
     , m_elements_per_record{m_file_loader.element_count()}
     , m_cache_root{cache_root}
@@ -70,6 +71,27 @@ nervana::block_manager_async::block_manager_async(block_loader_source_async* fil
             }
         }
     }
+
+    // setup block load sequence
+    m_block_load_sequence = generate_load_sequence(m_record_count, m_block_size, m_block_count);
+    m_file_loader.set_block_loader_sequence(m_block_load_sequence);
+}
+
+vector<pair<size_t, size_t>> block_manager_async::generate_load_sequence(size_t record_count, size_t block_size, size_t block_count)
+{
+    vector<pair<size_t, size_t>> rc;
+    for (size_t block=0; block<block_count; block++)
+    {
+        size_t sequence_start = block_size * block;
+        size_t sequence_count = block_size;
+        if (sequence_start+sequence_count > record_count)
+        {
+            sequence_count -= sequence_start+sequence_count - record_count;
+        }
+        rc.emplace_back(sequence_start, sequence_count);
+    }
+
+    return rc;
 }
 
 nervana::variable_buffer_array* block_manager_async::filler()
@@ -140,15 +162,14 @@ nervana::variable_buffer_array* block_manager_async::filler()
     else
     {
         // The non-cache path
-        if (m_current_block_number == m_block_count)
+        if (++m_current_block_number == m_block_count)
         {
             m_current_block_number = 0;
             m_file_loader.reset();
+            m_file_loader.set_block_loader_sequence(m_block_load_sequence);
         }
 
         input = m_source->next();
-
-        m_current_block_number++;
 
         for (size_t i = 0; i < m_elements_per_record; ++i)
         {

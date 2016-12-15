@@ -32,14 +32,15 @@ using namespace nervana;
 block_loader_file_async::block_loader_file_async(manifest_csv* manifest, size_t block_size)
     : block_loader_source_async(manifest)
     , m_block_size(block_size)
+    , m_record_count{manifest->record_count()}
     , m_manifest(*manifest)
 {
-//    INFO << "file loader requested block size " << m_block_size;
+    INFO << "file loader requested block size " << m_block_size;
     m_block_count = round((float)m_manifest.record_count() / (float)m_block_size);
     m_block_size = ceil((float)m_manifest.record_count() / (float)m_block_count);
-//    INFO << "file loader new block size " << m_block_size;
-//    INFO << "file loader record count " << m_manifest.record_count();
-//    INFO << "file loader m_block_count " << m_block_count;
+    INFO << "file loader new block size " << m_block_size;
+    INFO << "file loader record count " << m_manifest.record_count();
+    INFO << "file loader m_block_count " << m_block_count;
     m_elements_per_record = element_count();
     for (int k = 0; k < 2; ++k)
     {
@@ -129,4 +130,9 @@ nervana::variable_buffer_array* block_loader_file_async::filler()
 
 //    if (rc) INFO << rc->at(0).size() << ", " << rc->at(1).size(); else INFO << "nullptr";
     return rc;
+}
+
+void block_loader_file_async::reset()
+{
+    block_loader_source_async::reset();
 }

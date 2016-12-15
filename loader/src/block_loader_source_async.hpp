@@ -43,4 +43,6 @@ public:
     virtual size_t block_count() const = 0;
     virtual size_t elements_per_record() const = 0;
     virtual source_uid_t get_uid() const = 0;
+
+    virtual void set_block_loader_sequence(const std::vector<std::pair<size_t, size_t>>&) = 0;
 };

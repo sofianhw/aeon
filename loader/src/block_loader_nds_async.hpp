@@ -46,7 +46,7 @@ public:
 
     size_t record_count() const override
     {
-        return m_block_size;
+        return m_record_count;
     }
 
     size_t block_size() const override
@@ -69,9 +69,15 @@ public:
         return 0;
     }
 
+    void set_block_loader_sequence(const std::vector<std::pair<size_t, size_t>>& seq)
+    {
+        m_manifest.set_block_load_sequence(seq);
+    }
+
 private:
     size_t        m_block_size;
     size_t        m_block_count;
+    size_t        m_record_count;
     size_t        m_elements_per_record;
     manifest_csv& m_manifest;
 };

@@ -69,6 +69,7 @@ private:
     static void mark_cache_complete(const std::string& cache_dir);
     static bool take_ownership(const std::string& cache_dir, int& lock);
     static void release_ownership(const std::string& cache_dir, int lock);
+    static std::vector<std::pair<size_t, size_t>> generate_load_sequence(size_t record_count, size_t block_size, size_t block_count);
 
     static const std::string m_owner_lock_filename;
     static const std::string m_cache_complete_filename;
@@ -76,6 +77,7 @@ private:
     block_loader_source_async& m_file_loader;
     size_t                     m_block_size;
     size_t                     m_block_count;
+    size_t                     m_record_count;
     size_t                     m_current_block_number;
     size_t                     m_elements_per_record;
     const std::string          m_cache_root;
@@ -86,4 +88,5 @@ private:
     int                        m_cache_lock;
     size_t                     m_cache_hit = 0;
     size_t                     m_cache_miss = 0;
+    std::vector<std::pair<size_t, size_t>> m_block_load_sequence;
 };

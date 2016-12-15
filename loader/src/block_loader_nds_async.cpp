@@ -32,6 +32,7 @@ using namespace nervana;
 block_loader_nds_async::block_loader_nds_async(manifest_csv* manifest, size_t block_size)
     : block_loader_source_async(manifest)
     , m_block_size(block_size)
+    , m_record_count{manifest->record_count()}
     , m_manifest(*manifest)
 {
     for (int k = 0; k < 2; ++k)

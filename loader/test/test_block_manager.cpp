@@ -30,6 +30,26 @@
 using namespace std;
 using namespace nervana;
 
+TEST(block_manager, load_sequence)
+{
+    vector<pair<size_t, size_t>> seq = block_manager_async::generate_load_sequence(1003, 335, 3);
+    for (auto s : seq)
+    {
+        INFO << "\t" << s.first << ", " << s.second << ", " << s.first + s.second;
+    }
+    ASSERT_EQ(3, seq.size());
+
+    EXPECT_EQ(0, seq[0].first);
+    EXPECT_EQ(335, seq[0].second);
+
+    EXPECT_EQ(335, seq[1].first);
+    EXPECT_EQ(335, seq[1].second);
+
+    EXPECT_EQ(670, seq[2].first);
+    EXPECT_EQ(333, seq[2].second);
+
+}
+
 TEST(block_manager, cache_complete)
 {
     string cache_root = file_util::make_temp_directory();

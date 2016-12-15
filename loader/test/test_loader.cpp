@@ -334,7 +334,7 @@ TEST(loader,test)
     int height = 16;
     int width = 16;
     size_t batch_size = 32;
-    size_t input_file_count = 1002;
+    size_t input_file_count = 1003;
     size_t block_size = 300;
     manifest_maker mm(input_file_count, height, width);
     string manifest_filename = mm.get_manifest_name();
