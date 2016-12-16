@@ -48,6 +48,7 @@ SRCS="
     web_app.cpp
     web_server.cpp
     base64.cpp
+    block.cpp
 "
 # remove newlines
 export SRCS="$(echo ${SRCS} | sed 's/\n//g')"

@@ -169,9 +169,10 @@ TEST(manifest, root_path)
         }
         f.close();
         nervana::manifest_csv manifest(manifest_file, false);
-        int                   i = 0;
-        for (const vector<string>& x : manifest)
+        for (int i=0; i<manifest.record_count(); i++)
         {
+            const vector<string>& x = manifest[i];
+
             ASSERT_EQ(2, x.size());
             stringstream ss;
             ss << "/t1/image" << i << ".png";
@@ -179,7 +180,6 @@ TEST(manifest, root_path)
             ss.str("");
             ss << "/t1/target" << i << ".txt";
             EXPECT_STREQ(x[1].c_str(), ss.str().c_str());
-            i++;
         }
     }
     {
@@ -191,9 +191,10 @@ TEST(manifest, root_path)
         }
         f.close();
         nervana::manifest_csv manifest(manifest_file, false, "/x1");
-        int                   i = 0;
-        for (const vector<string>& x : manifest)
+        for (int i=0; i<manifest.record_count(); i++)
         {
+            const vector<string>& x = manifest[i];
+
             ASSERT_EQ(2, x.size());
             stringstream ss;
             ss << "/t1/image" << i << ".png";
@@ -201,7 +202,6 @@ TEST(manifest, root_path)
             ss.str("");
             ss << "/t1/target" << i << ".txt";
             EXPECT_STREQ(x[1].c_str(), ss.str().c_str());
-            i++;
         }
     }
     {
@@ -213,9 +213,10 @@ TEST(manifest, root_path)
         }
         f.close();
         nervana::manifest_csv manifest(manifest_file, false, "/x1");
-        int                   i = 0;
-        for (const vector<string>& x : manifest)
+        for (int i=0; i<manifest.record_count(); i++)
         {
+            const vector<string>& x = manifest[i];
+
             ASSERT_EQ(2, x.size());
             stringstream ss;
             ss << "/x1/t1/image" << i << ".png";
@@ -223,7 +224,6 @@ TEST(manifest, root_path)
             ss.str("");
             ss << "/x1/t1/target" << i << ".txt";
             EXPECT_STREQ(x[1].c_str(), ss.str().c_str());
-            i++;
         }
     }
     remove(manifest_file.c_str());

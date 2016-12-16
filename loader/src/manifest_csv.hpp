@@ -43,15 +43,15 @@ namespace nervana
     class manifest_csv;
 }
 
-class nervana::manifest_csv : public nervana::async_manager_source<std::vector<std::string>>,
+class nervana::manifest_csv : public nervana::async_manager_source<std::vector<std::vector<std::string>>>,
                               public nervana::manifest
 {
 public:
     manifest_csv(const std::string& filename, bool shuffle, const std::string& root = "",
-                 float subset_fraction = 1.0);
+                 float subset_fraction = 1.0, size_t block_size=5000);
 
     manifest_csv(std::istream& stream, bool shuffle, const std::string& root = "",
-                 float subset_fraction = 1.0);
+                 float subset_fraction = 1.0, size_t block_size=5000);
 
     virtual ~manifest_csv()
     {
@@ -62,36 +62,25 @@ public:
     std::string cache_id();
     std::string version();
 
-    std::vector<std::string>* next() override;
+    std::vector<std::vector<std::string>>* next() override;
     void reset() override;
+
+    size_t block_count() const
+    {
+        return m_block_list.size();
+    }
 
     size_t record_count() const override
     {
-        return m_record_list.size();
+        return m_record_count;
     }
 
     size_t element_count() const override
     {
-        return m_record_list.size() > 0 ? m_record_list[0].size() : 0;
+        return m_element_types.size();
     }
 
-    // begin and end provide iterators over the records
-    std::vector<record>::const_iterator begin() const
-    {
-        return m_record_list.begin();
-    }
-
-    std::vector<record>::const_iterator end() const
-    {
-        return m_record_list.end();
-    }
-
-    const record& operator[](size_t index) const
-    {
-        return m_record_list[index];
-    }
-
-    void generate_subset(float subset_fraction);
+    void generate_subset(std::vector<std::vector<std::string>>&, float subset_fraction);
     uint32_t get_crc();
 
     static char get_delimiter()
@@ -101,19 +90,20 @@ public:
 
     const std::vector<element_t>& get_element_types() const;
 
-protected:
-    void parse_stream(std::istream& is, const std::string& root);
+    const std::vector<std::string>& operator[](size_t offset) const;
 
-    void initialize(std::istream& stream, bool shuffle, const std::string& root,
+protected:
+    void initialize(std::istream& stream, size_t block_size, bool shuffle, const std::string& root,
                     float subset_fraction);
 
 private:
     const std::string      m_source_filename;
-    std::vector<record>    m_record_list;
+    std::vector<std::vector<record>>    m_block_list;
     CryptoPP::CRC32C       m_crc_engine;
     bool                   m_crc_computed = false;
     uint32_t               m_computed_crc;
     size_t                 m_counter{0};
+    size_t                 m_record_count;
     static const char      m_delimiter_char = '\t';
     static const char      m_comment_char = '#';
     static const char      m_metadata_char = '@';

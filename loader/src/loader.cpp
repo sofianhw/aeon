@@ -78,6 +78,7 @@ loader_async::~loader_async()
 
 fixed_buffer_map* loader_async::filler()
 {
+    INFO;
     fixed_buffer_map*      outputs = get_pending_buffer();
     variable_buffer_array* inputs  = m_source->next();
 
@@ -108,6 +109,7 @@ fixed_buffer_map* loader_async::filler()
         }
     }
 
+    INFO;
     return outputs;
 }
 
@@ -115,6 +117,7 @@ void loader_async::work(int id, variable_buffer_array* in_buf, fixed_buffer_map*
 {
     // Thread function.
     // No locking required because threads write into non-overlapping regions.
+    INFO;
     try
     {
         affirm(in_buf->at(0).get_item_count() != 0, "input buffer pool is empty.");
@@ -129,6 +132,7 @@ void loader_async::work(int id, variable_buffer_array* in_buf, fixed_buffer_map*
         cout << "decode_thread_pool exception: " << e.what() << endl;
         // m_buffer_pool_decoded->write_exception(std::current_exception());
     }
+    INFO;
 }
 
 loader_config::loader_config(nlohmann::json js)
@@ -265,12 +269,15 @@ loader::iterator::iterator(const iterator& other)
 
 loader::iterator& loader::iterator::operator++()
 {
+    INFO;
     m_current_loader.increment_position();
+    INFO;
     return *this;
 }
 
 loader::iterator& loader::iterator::operator++(int)
 {
+    INFO;
     iterator& rc = *this;
     ++rc;
     return rc;
@@ -278,6 +285,7 @@ loader::iterator& loader::iterator::operator++(int)
 
 bool loader::iterator::operator==(const iterator& other) const
 {
+    INFO;
     bool res = &m_current_loader == &other.m_current_loader;
     res &= (other.m_is_end && positional_end()) || (m_is_end && other.positional_end());
     return res;
@@ -285,22 +293,26 @@ bool loader::iterator::operator==(const iterator& other) const
 
 bool loader::iterator::operator!=(const iterator& other) const
 {
+    INFO;
     return !(*this == other);
 }
 
 // Whether or not this strictly positional iterator has reached the end
 bool loader::iterator::positional_end() const
 {
+    INFO;
     return !m_is_end && (position() >= m_current_loader.m_batch_count_value);
 }
 
 const fixed_buffer_map& loader::iterator::operator*() const
 {
+    INFO;
     return *(m_current_loader.m_output_buffer_ptr);
 }
 
 void loader::increment_position()
 {
+    INFO;
     m_output_buffer_ptr = m_decoder->next();
     m_position++;
 

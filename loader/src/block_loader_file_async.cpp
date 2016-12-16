@@ -53,6 +53,7 @@ block_loader_file_async::block_loader_file_async(manifest_csv* manifest, size_t 
 
 nervana::variable_buffer_array* block_loader_file_async::filler()
 {
+    INFO;
     variable_buffer_array* rc = get_pending_buffer();
 
     for (size_t i = 0; i < m_elements_per_record; ++i)
@@ -61,22 +62,17 @@ nervana::variable_buffer_array* block_loader_file_async::filler()
         rc->at(i).reset();
     }
 
-    for (int i = 0; i < m_block_size; ++i)
+    auto block = m_source->next();
+    if (block != nullptr)
     {
-        auto element_list = m_source->next();
-
-        if (element_list == nullptr)
-        {
-            break;
-        }
-        else
+        for (auto element_list : *block)
         {
             const vector<manifest::element_t>& types = m_manifest.get_element_types();
             for (int j = 0; j < m_elements_per_record; ++j)
             {
                 try
                 {
-                    const string& element = element_list->at(j);
+                    const string& element = element_list[j];
                     switch (types[j])
                     {
                     case manifest::element_t::FILE:
@@ -128,7 +124,7 @@ nervana::variable_buffer_array* block_loader_file_async::filler()
         rc = nullptr;
     }
 
-//    if (rc) INFO << rc->at(0).size() << ", " << rc->at(1).size(); else INFO << "nullptr";
+    INFO << (rc ? "valid" : "nullptr");
     return rc;
 }
 

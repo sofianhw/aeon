@@ -44,19 +44,19 @@ public:
     variable_buffer_array* filler() override;
     void reset() override;
 
+    size_t block_count() const override
+    {
+        return m_manifest.block_count();
+    }
+
     size_t record_count() const override
     {
-        return m_record_count;
+        return m_manifest.record_count();
     }
 
     size_t block_size() const override
     {
-        return m_block_size;
-    }
-
-    size_t block_count() const override
-    {
-        return m_block_count;
+        return 1;
     }
 
     size_t elements_per_record() const override

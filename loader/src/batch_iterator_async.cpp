@@ -34,6 +34,7 @@ batch_iterator_async::batch_iterator_async(block_manager_async* blkl, size_t bat
 
 variable_buffer_array* batch_iterator_async::filler()
 {
+    INFO;
     variable_buffer_array* rc = get_pending_buffer();
 
     // This is for the first pass
@@ -78,7 +79,7 @@ variable_buffer_array* batch_iterator_async::filler()
         }
     }
 
-//    if (rc) INFO << rc->at(0).size() << ", " << rc->at(1).size(); else INFO << "nullptr";
+    INFO;
     return rc;
 }
 

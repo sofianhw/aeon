@@ -20,6 +20,7 @@
 #include "async_manager.hpp"
 #include "block_loader_source_async.hpp"
 #include "buffer_batch.hpp"
+#include "block.hpp"
 
 /* block_manager_async
  *
@@ -69,7 +70,6 @@ private:
     static void mark_cache_complete(const std::string& cache_dir);
     static bool take_ownership(const std::string& cache_dir, int& lock);
     static void release_ownership(const std::string& cache_dir, int lock);
-    static std::vector<std::pair<size_t, size_t>> generate_load_sequence(size_t record_count, size_t block_size, size_t block_count);
 
     static const std::string m_owner_lock_filename;
     static const std::string m_cache_complete_filename;
@@ -88,5 +88,5 @@ private:
     int                        m_cache_lock;
     size_t                     m_cache_hit = 0;
     size_t                     m_cache_miss = 0;
-    std::vector<std::pair<size_t, size_t>> m_block_load_sequence;
+    std::vector<block_info> m_block_load_sequence;
 };

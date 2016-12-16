@@ -73,29 +73,13 @@ nervana::block_manager_async::block_manager_async(block_loader_source_async* fil
     }
 
     // setup block load sequence
-    m_block_load_sequence = generate_load_sequence(m_record_count, m_block_size, m_block_count);
-    m_file_loader.set_block_loader_sequence(m_block_load_sequence);
-}
-
-vector<pair<size_t, size_t>> block_manager_async::generate_load_sequence(size_t record_count, size_t block_size, size_t block_count)
-{
-    vector<pair<size_t, size_t>> rc;
-    for (size_t block=0; block<block_count; block++)
-    {
-        size_t sequence_start = block_size * block;
-        size_t sequence_count = block_size;
-        if (sequence_start+sequence_count > record_count)
-        {
-            sequence_count -= sequence_start+sequence_count - record_count;
-        }
-        rc.emplace_back(sequence_start, sequence_count);
-    }
-
-    return rc;
+//    m_block_load_sequence = generate_block_list(m_record_count, m_block_size, m_block_count);
+//    m_file_loader.set_block_loader_sequence(m_block_load_sequence);
 }
 
 nervana::variable_buffer_array* block_manager_async::filler()
 {
+    INFO;
     variable_buffer_array* rc = get_pending_buffer();
     variable_buffer_array* input = nullptr;
 
@@ -166,7 +150,7 @@ nervana::variable_buffer_array* block_manager_async::filler()
         {
             m_current_block_number = 0;
             m_file_loader.reset();
-            m_file_loader.set_block_loader_sequence(m_block_load_sequence);
+//            m_file_loader.set_block_loader_sequence(m_block_load_sequence);
         }
 
         input = m_source->next();
@@ -182,6 +166,7 @@ nervana::variable_buffer_array* block_manager_async::filler()
         rc = nullptr;
     }
 
+    INFO << (rc ? "valid" : "nullptr");
     return rc;
 }
 

@@ -22,6 +22,7 @@
 #include "manifest_csv.hpp"
 #include "block_loader_file_async.hpp"
 #include "block_loader_source_async.hpp"
+#include "block.hpp"
 
 #define private public
 
@@ -30,24 +31,28 @@
 using namespace std;
 using namespace nervana;
 
-TEST(block_manager, load_sequence)
+TEST(block_manager, block_list)
 {
-    vector<pair<size_t, size_t>> seq = block_manager_async::generate_load_sequence(1003, 335, 3);
-    for (auto s : seq)
     {
-        INFO << "\t" << s.first << ", " << s.second << ", " << s.first + s.second;
+        vector<block_info> seq = generate_block_list(1003, 335);
+        ASSERT_EQ(3, seq.size());
+
+        EXPECT_EQ(0, seq[0].start());
+        EXPECT_EQ(335, seq[0].count());
+
+        EXPECT_EQ(335, seq[1].start());
+        EXPECT_EQ(335, seq[1].count());
+
+        EXPECT_EQ(670, seq[2].start());
+        EXPECT_EQ(333, seq[2].count());
     }
-    ASSERT_EQ(3, seq.size());
+    {
+        vector<block_info> seq = generate_block_list(20, 5000);
+        ASSERT_EQ(1, seq.size());
 
-    EXPECT_EQ(0, seq[0].first);
-    EXPECT_EQ(335, seq[0].second);
-
-    EXPECT_EQ(335, seq[1].first);
-    EXPECT_EQ(335, seq[1].second);
-
-    EXPECT_EQ(670, seq[2].first);
-    EXPECT_EQ(333, seq[2].second);
-
+        EXPECT_EQ(0, seq[0].start());
+        EXPECT_EQ(20, seq[0].count());
+    }
 }
 
 TEST(block_manager, cache_complete)
