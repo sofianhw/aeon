@@ -15,7 +15,7 @@
 
 #include "gtest/gtest.h"
 #include "block_loader_file_async.hpp"
-#include "csv_manifest_maker.hpp"
+#include "manifest_maker.hpp"
 #include "file_util.hpp"
 
 using namespace std;
@@ -25,7 +25,7 @@ TEST(block_loader_file, constructor)
 {
     manifest_maker    mm;
     string            tmpname = mm.tmp_manifest_file(0, {0, 0});
-    block_loader_file blf(make_shared<nervana::manifest_csv>(tmpname, true), 1.0, 4);
+    block_loader_file blf(make_shared<nervana::manifest_file>(tmpname, true), 1.0, 4);
 }
 
 TEST(block_loader_file, load_block)
@@ -38,7 +38,7 @@ TEST(block_loader_file, load_block)
     float    subset_fraction = 1.0;
 
     auto manifest_file = mm.tmp_manifest_file(4, {object_size, target_size});
-    auto manifest = make_shared<manifest_csv>(manifest_file, true);
+    auto manifest = make_shared<manifest_file>(manifest_file, true);
     block_loader_file_async blf(manifest, subset_fraction, block_size);
 
     buffer_in_array bp(2);
@@ -71,7 +71,7 @@ TEST(block_loader_file, subset_fraction)
     float          subset_fraction = 0.01;
     size_t         total_records   = 1000;
 
-    block_loader_file blf(make_shared<nervana::manifest_csv>(mm.tmp_manifest_file(total_records, {object_size, target_size}), true),
+    block_loader_file blf(make_shared<nervana::manifest_file>(mm.tmp_manifest_file(total_records, {object_size, target_size}), true),
                           subset_fraction, block_size);
 
     EXPECT_EQ(blf.record_count(), size_t(total_records * subset_fraction));
@@ -96,7 +96,7 @@ TEST(block_loader_file, exception)
     manifest_maker mm;
     float          subset_fraction = 1.0;
 
-    block_loader_file blf(make_shared<nervana::manifest_csv>(mm.tmp_manifest_file_with_invalid_filename(), false), subset_fraction,
+    block_loader_file blf(make_shared<nervana::manifest_file>(mm.tmp_manifest_file_with_invalid_filename(), false), subset_fraction,
                           1);
 
     buffer_in_array bp(2);
@@ -121,7 +121,7 @@ TEST(block_loader_file, exception)
 //    manifest_maker mm;
 //    float subset_fraction = 0.5;
 //    block_loader_file blf(
-//        make_shared<nervana::manifest_csv>(mm.tmp_manifest_file(13, {16, 16}), false),
+//        make_shared<nervana::manifest_file>(mm.tmp_manifest_file(13, {16, 16}), false),
 //        subset_fraction,
 //        5
 //    );
@@ -140,7 +140,7 @@ TEST(block_loader_file, performance)
     string         version         = "version123";
 
     auto blf = make_shared<block_loader_file>(
-        make_shared<nervana::manifest_csv>(mm.tmp_manifest_file(1000, {object_size, target_size}), true), subset_fraction,
+        make_shared<nervana::manifest_file>(mm.tmp_manifest_file(1000, {object_size, target_size}), true), subset_fraction,
         block_size);
 
     string                        cache_dir = file_util::make_temp_directory();

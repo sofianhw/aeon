@@ -26,8 +26,8 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-#include "csv_manifest_maker.hpp"
-#include "manifest_csv.hpp"
+#include "manifest_maker.hpp"
+#include "manifest_file.hpp"
 #include "file_util.hpp"
 #include "gen_image.hpp"
 
@@ -85,7 +85,7 @@ string manifest_maker::image_manifest(size_t record_count, int height, int width
 //        mat = cv::Scalar(0,0,0);
         string image_path = tmp_filename("_" + std::to_string(i) + ".png");
         string target_path = tmp_filename();
-        f_manifest << image_path << manifest_csv::get_delimiter() << target_path << '\n';
+        f_manifest << image_path << manifest_file::get_delimiter() << target_path << '\n';
         cv::imwrite(image_path, mat);
         {
             ofstream f(target_path);
@@ -111,7 +111,7 @@ string manifest_maker::tmp_manifest_file(size_t record_count, vector<size_t> siz
         {
             if (j != 0)
             {
-                f << manifest_csv::get_delimiter();
+                f << manifest_file::get_delimiter();
             }
 
             f << tmp_file_repeating(sizes[j], (i * sizes.size()) + j);
@@ -148,7 +148,7 @@ std::string manifest_maker::tmp_manifest_file_with_invalid_filename()
 
     for (uint32_t i = 0; i < 10; ++i)
     {
-        f << tmp_filename() + ".this_file_shouldnt_exist" << manifest_csv::get_delimiter();
+        f << tmp_filename() + ".this_file_shouldnt_exist" << manifest_file::get_delimiter();
         f << tmp_filename() + ".this_file_shouldnt_exist" << endl;
     }
 
@@ -167,7 +167,7 @@ std::string manifest_maker::tmp_manifest_file_with_ragged_fields()
         {
             if (j != 0)
             {
-                f << manifest_csv::get_delimiter();
+                f << manifest_file::get_delimiter();
             }
             f << tmp_filename();
         }

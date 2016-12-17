@@ -40,20 +40,20 @@
  */
 namespace nervana
 {
-    class manifest_csv;
+    class manifest_file;
 }
 
-class nervana::manifest_csv : public nervana::async_manager_source<std::vector<std::vector<std::string>>>,
+class nervana::manifest_file : public nervana::async_manager_source<std::vector<std::vector<std::string>>>,
                               public nervana::manifest
 {
 public:
-    manifest_csv(const std::string& filename, bool shuffle, const std::string& root = "",
+    manifest_file(const std::string& filename, bool shuffle, const std::string& root = "",
                  float subset_fraction = 1.0, size_t block_size=5000);
 
-    manifest_csv(std::istream& stream, bool shuffle, const std::string& root = "",
+    manifest_file(std::istream& stream, bool shuffle, const std::string& root = "",
                  float subset_fraction = 1.0, size_t block_size=5000);
 
-    virtual ~manifest_csv()
+    virtual ~manifest_file()
     {
     }
 

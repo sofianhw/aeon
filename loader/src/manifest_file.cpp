@@ -23,7 +23,7 @@
 #include <sstream>
 #include <iomanip>
 
-#include "manifest_csv.hpp"
+#include "manifest_file.hpp"
 #include "util.hpp"
 #include "file_util.hpp"
 #include "log.hpp"
@@ -32,7 +32,7 @@
 using namespace std;
 using namespace nervana;
 
-manifest_csv::manifest_csv(const string& filename, bool shuffle, const string& root,
+manifest_file::manifest_file(const string& filename, bool shuffle, const string& root,
                            float subset_fraction, size_t block_size)
     : m_source_filename(filename)
     , m_record_count{0}
@@ -48,13 +48,13 @@ manifest_csv::manifest_csv(const string& filename, bool shuffle, const string& r
     initialize(infile, block_size, shuffle, root, subset_fraction);
 }
 
-manifest_csv::manifest_csv(std::istream& stream, bool shuffle, const std::string& root,
+manifest_file::manifest_file(std::istream& stream, bool shuffle, const std::string& root,
                            float subset_fraction, size_t block_size)
 {
     initialize(stream, block_size, shuffle, root, subset_fraction);
 }
 
-string manifest_csv::cache_id()
+string manifest_file::cache_id()
 {
     // returns a hash of the m_filename
     std::size_t  h = std::hash<std::string>()(m_source_filename);
@@ -63,14 +63,14 @@ string manifest_csv::cache_id()
     return ss.str();
 }
 
-string manifest_csv::version()
+string manifest_file::version()
 {
     stringstream ss;
     ss << setfill('0') << setw(8) << hex << get_crc();
     return ss.str();
 }
 
-void manifest_csv::initialize(std::istream& stream, size_t block_size, bool shuffle, const std::string& root,
+void manifest_file::initialize(std::istream& stream, size_t block_size, bool shuffle, const std::string& root,
                               float subset_fraction)
 {
     // parse istream is and load the entire thing into m_record_list
@@ -206,12 +206,12 @@ void manifest_csv::initialize(std::istream& stream, size_t block_size, bool shuf
     }
 }
 
-const std::vector<manifest_csv::element_t>& manifest_csv::get_element_types() const
+const std::vector<manifest_file::element_t>& manifest_file::get_element_types() const
 {
     return m_element_types;
 }
 
-vector<vector<string>>* manifest_csv::next()
+vector<vector<string>>* manifest_file::next()
 {
     INFO << "m_counter " << m_counter;
     INFO << "m_block_list.size() " << m_block_list.size();
@@ -225,12 +225,12 @@ vector<vector<string>>* manifest_csv::next()
     return rc;
 }
 
-void manifest_csv::reset()
+void manifest_file::reset()
 {
     m_counter = 0;
 }
 
-void manifest_csv::generate_subset(vector<vector<string>>& record_list, float subset_fraction)
+void manifest_file::generate_subset(vector<vector<string>>& record_list, float subset_fraction)
 {
     if (subset_fraction < 1.0)
     {
@@ -256,7 +256,7 @@ void manifest_csv::generate_subset(vector<vector<string>>& record_list, float su
     }
 }
 
-uint32_t manifest_csv::get_crc()
+uint32_t manifest_file::get_crc()
 {
     if (m_crc_computed == false)
     {
@@ -276,7 +276,7 @@ uint32_t manifest_csv::get_crc()
     return m_computed_crc;
 }
 
-const std::vector<std::string>& manifest_csv::operator[](size_t offset) const
+const std::vector<std::string>& manifest_file::operator[](size_t offset) const
 {
     for (const vector<record>& block : m_block_list)
     {

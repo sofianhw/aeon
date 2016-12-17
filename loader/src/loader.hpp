@@ -197,7 +197,7 @@ private:
 
     iterator                                 m_current_iter;
     iterator                                 m_end_iter;
-    std::shared_ptr<manifest_csv>            m_manifest;
+    std::shared_ptr<manifest_file>            m_manifest;
     std::shared_ptr<block_loader_file_async> m_block_loader;
     std::shared_ptr<block_manager_async>     m_block_manager;
     std::shared_ptr<batch_iterator_async>    m_batch_iterator;

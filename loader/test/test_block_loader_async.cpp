@@ -15,10 +15,10 @@
 
 #include "gtest/gtest.h"
 #include "async_manager.hpp"
-#include "manifest_csv.hpp"
+#include "manifest_file.hpp"
 #include "block_loader_file_async.hpp"
 #include "batch_iterator_async.hpp"
-#include "csv_manifest_maker.hpp"
+#include "manifest_maker.hpp"
 #include "file_util.hpp"
 #include "log.hpp"
 
@@ -37,8 +37,8 @@ TEST(block_loader_async, file_block)
     // float    subset_fraction = 1.0;
 
     // each call to next() will yield pointer to vector<string> (filename list per record)
-    auto manifest_file = mm.tmp_manifest_file(record_count, {object_size, target_size});
-    manifest_csv manifest(manifest_file, false);
+    auto manifest_path = mm.tmp_manifest_file(record_count, {object_size, target_size});
+    manifest_file manifest(manifest_path, false);
 
     // each call to next() will yield pointer to variable buffer_array
     //   which is vector of buffer_variable_size_elements
@@ -80,8 +80,8 @@ TEST(block_loader_async, file_block_odd)
     // float    subset_fraction = 1.0;
 
     // each call to next() will yield pointer to vector<string> (filename list per record)
-    auto manifest_file = mm.tmp_manifest_file(record_count, {object_size, target_size});
-    manifest_csv manifest(manifest_file, false);
+    auto manifest_path = mm.tmp_manifest_file(record_count, {object_size, target_size});
+    manifest_file manifest(manifest_path, false);
 
     // each call to next() will yield pointer to variable buffer_array
     //   which is vector of buffer_variable_size_elements
@@ -122,8 +122,8 @@ TEST(block_loader_async, iterate_batch)
     // float    subset_fraction = 1.0;
 
     // each call to next() will yield pointer to vector<string> (filename list per record)
-    auto manifest_file = mm.tmp_manifest_file(record_count, {object_size, target_size});
-    manifest_csv manifest(manifest_file, false);
+    auto manifest_path = mm.tmp_manifest_file(record_count, {object_size, target_size});
+    manifest_file manifest(manifest_path, false);
 
     // each call to next() will yield pointer to variable buffer_array
     //   which is vector of buffer_variable_size_elements

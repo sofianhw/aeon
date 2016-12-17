@@ -203,7 +203,7 @@ void loader::initialize(nlohmann::json& config_json)
     sox_format_init();
 
     // the manifest defines which data should be included in the dataset
-    m_manifest = make_shared<manifest_csv>(lcfg.manifest_filename, lcfg.shuffle_manifest, lcfg.manifest_root, lcfg.subset_fraction);
+    m_manifest = make_shared<manifest_file>(lcfg.manifest_filename, lcfg.shuffle_manifest, lcfg.manifest_root, lcfg.subset_fraction);
 
     // TODO: make the constructor throw this error
     if (m_manifest->record_count() == 0)

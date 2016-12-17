@@ -26,7 +26,7 @@ SRCS="
     interface.cpp
     loader.cpp
     log.cpp
-    manifest_csv.cpp
+    manifest_file.cpp
     manifest_nds.cpp
     noise_clips.cpp
     provider_audio_classifier.cpp

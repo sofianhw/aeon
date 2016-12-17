@@ -18,8 +18,8 @@
 #include "gtest/gtest.h"
 #include "file_util.hpp"
 #include "log.hpp"
-#include "csv_manifest_maker.hpp"
-#include "manifest_csv.hpp"
+#include "manifest_maker.hpp"
+#include "manifest_file.hpp"
 #include "block_loader_file_async.hpp"
 #include "block_loader_source_async.hpp"
 #include "block.hpp"
@@ -95,8 +95,8 @@ TEST(block_manager, cache_busy)
     size_t object_size     = 16;
     size_t target_size     = 16;
 
-    auto manifest_file = mm.tmp_manifest_file(record_count, {object_size, target_size});
-    manifest_csv manifest(manifest_file, false);
+    auto manifest_path = mm.tmp_manifest_file(record_count, {object_size, target_size});
+    manifest_file manifest(manifest_path, false);
 
     block_loader_file_async file_reader(&manifest, block_size);
     string cache_name = block_manager_async::create_cache_name(file_reader.get_uid());
@@ -128,8 +128,8 @@ TEST(block_manager, build_cache)
     ASSERT_EQ(0, object_size % sizeof(uint32_t));
     ASSERT_EQ(0, target_size % sizeof(uint32_t));
 
-    auto manifest_file = mm.tmp_manifest_file(record_count, {object_size, target_size});
-    manifest_csv manifest(manifest_file, false);
+    auto manifest_path = mm.tmp_manifest_file(record_count, {object_size, target_size});
+    manifest_file manifest(manifest_path, false);
 
     block_loader_file_async file_reader(&manifest, block_size);
     string cache_name = block_manager_async::create_cache_name(file_reader.get_uid());
@@ -189,8 +189,8 @@ TEST(block_manager, reuse_cache)
     ASSERT_EQ(0, object_size % sizeof(uint32_t));
     ASSERT_EQ(0, target_size % sizeof(uint32_t));
 
-    auto manifest_file = mm.tmp_manifest_file(record_count, {object_size, target_size});
-    manifest_csv manifest(manifest_file, false);
+    auto manifest_path = mm.tmp_manifest_file(record_count, {object_size, target_size});
+    manifest_file manifest(manifest_path, false);
 
     // first build the cache
     {

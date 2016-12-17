@@ -23,7 +23,7 @@
 #define private public
 
 #include "loader.hpp"
-#include "csv_manifest_maker.hpp"
+#include "manifest_maker.hpp"
 #include "gen_image.hpp"
 
 using namespace std;

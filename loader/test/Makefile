@@ -22,7 +22,7 @@ include ../Makefile.base
 
 TEST_SRCS := \
     test_buffer.cpp \
-    csv_manifest_maker.cpp \
+    manifest_maker.cpp \
     test_manifest_csv.cpp \
     gen_image.cpp \
     helpers.cpp \

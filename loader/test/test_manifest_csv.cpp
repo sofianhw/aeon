@@ -27,11 +27,11 @@
 #include <chrono>
 
 #include "gtest/gtest.h"
-#include "manifest_csv.hpp"
-#include "csv_manifest_maker.hpp"
+#include "manifest_file.hpp"
+#include "manifest_maker.hpp"
 #include "util.hpp"
 #include "file_util.hpp"
-#include "manifest_csv.hpp"
+#include "manifest_file.hpp"
 #include "crc.hpp"
 #include "file_util.hpp"
 #include "block_loader_file_async.hpp"
@@ -46,28 +46,28 @@ TEST(manifest, constructor)
 {
     manifest_maker        mm;
     string                tmpname = mm.tmp_manifest_file(0, {0, 0});
-    nervana::manifest_csv manifest0(tmpname, false);
+    nervana::manifest_file manifest0(tmpname, false);
 }
 
 TEST(manifest, no_file)
 {
-    ASSERT_THROW(nervana::manifest_csv manifest0("/tmp/jsdkfjsjkfdjaskdfj_doesnt_exist", false), std::runtime_error);
+    ASSERT_THROW(nervana::manifest_file manifest0("/tmp/jsdkfjsjkfdjaskdfj_doesnt_exist", false), std::runtime_error);
 }
 
 TEST(manifest, id_eq)
 {
     manifest_maker        mm;
     string                tmpname = mm.tmp_manifest_file(0, {0, 0});
-    nervana::manifest_csv manifest1(tmpname, false);
-    nervana::manifest_csv manifest2(tmpname, false);
+    nervana::manifest_file manifest1(tmpname, false);
+    nervana::manifest_file manifest2(tmpname, false);
     ASSERT_EQ(manifest1.cache_id(), manifest2.cache_id());
 }
 
 TEST(manifest, id_ne)
 {
     manifest_maker        mm;
-    nervana::manifest_csv manifest1(mm.tmp_manifest_file(0, {0, 0}), false);
-    nervana::manifest_csv manifest2(mm.tmp_manifest_file(0, {0, 0}), false);
+    nervana::manifest_file manifest1(mm.tmp_manifest_file(0, {0, 0}), false);
+    nervana::manifest_file manifest2(mm.tmp_manifest_file(0, {0, 0}), false);
     ASSERT_NE(manifest1.cache_id(), manifest2.cache_id());
 }
 
@@ -75,8 +75,8 @@ TEST(manifest, version_eq)
 {
     manifest_maker        mm;
     string                tmpname = mm.tmp_manifest_file(0, {0, 0});
-    nervana::manifest_csv manifest1(tmpname, false);
-    nervana::manifest_csv manifest2(tmpname, false);
+    nervana::manifest_file manifest1(tmpname, false);
+    nervana::manifest_file manifest2(tmpname, false);
     ASSERT_EQ(manifest1.version(), manifest2.version());
 }
 
@@ -84,7 +84,7 @@ TEST(manifest, parse_file_doesnt_exist)
 {
     manifest_maker        mm;
     string                tmpname = mm.tmp_manifest_file(0, {0, 0});
-    nervana::manifest_csv manifest0(tmpname, false);
+    nervana::manifest_file manifest0(tmpname, false);
 
     ASSERT_EQ(manifest0.record_count(), 0);
 }
@@ -94,7 +94,7 @@ TEST(manifest, parse_file)
     manifest_maker mm;
     string         tmpname = mm.tmp_manifest_file(2, {0, 0});
 
-    nervana::manifest_csv manifest0(tmpname, false);
+    nervana::manifest_file manifest0(tmpname, false);
     ASSERT_EQ(manifest0.record_count(), 2);
 }
 
@@ -102,8 +102,8 @@ TEST(manifest, no_shuffle)
 {
     manifest_maker        mm;
     string                filename = mm.tmp_manifest_file(20, {4, 4});
-    nervana::manifest_csv manifest1(filename, false);
-    nervana::manifest_csv manifest2(filename, false);
+    nervana::manifest_file manifest1(filename, false);
+    nervana::manifest_file manifest2(filename, false);
 
     ASSERT_EQ(manifest1.record_count(), manifest2.record_count());
     ASSERT_EQ(2, manifest1.element_count());
@@ -118,8 +118,8 @@ TEST(manifest, shuffle)
 {
     manifest_maker        mm;
     string                filename = mm.tmp_manifest_file(20, {4, 4});
-    nervana::manifest_csv manifest1(filename, false);
-    nervana::manifest_csv manifest2(filename, true);
+    nervana::manifest_file manifest1(filename, false);
+    nervana::manifest_file manifest2(filename, true);
 
     bool different = false;
 
@@ -139,13 +139,13 @@ TEST(manifest, non_paired_manifests)
     {
         manifest_maker        mm;
         string                filename = mm.tmp_manifest_file(20, {4, 4, 4});
-        nervana::manifest_csv manifest1(filename, false);
+        nervana::manifest_file manifest1(filename, false);
         ASSERT_EQ(manifest1.record_count(), 20);
     }
     {
         manifest_maker        mm;
         string                filename = mm.tmp_manifest_file(20, {4});
-        nervana::manifest_csv manifest1(filename, false);
+        nervana::manifest_file manifest1(filename, false);
         ASSERT_EQ(manifest1.record_count(), 20);
     }
 }
@@ -154,7 +154,7 @@ TEST(manifest, uneven_records)
 {
     manifest_maker mm;
     string         filename = mm.tmp_manifest_file_with_ragged_fields();
-    EXPECT_THROW(nervana::manifest_csv manifest1(filename, false), runtime_error);
+    EXPECT_THROW(nervana::manifest_file manifest1(filename, false), runtime_error);
 }
 
 TEST(manifest, root_path)
@@ -164,11 +164,11 @@ TEST(manifest, root_path)
         ofstream f(manifest_file);
         for (int i = 0; i < 10; i++)
         {
-            f << "/t1/image" << i << ".png" << manifest_csv::get_delimiter();
+            f << "/t1/image" << i << ".png" << manifest_file::get_delimiter();
             f << "/t1/target" << i << ".txt\n";
         }
         f.close();
-        nervana::manifest_csv manifest(manifest_file, false);
+        nervana::manifest_file manifest(manifest_file, false);
         for (int i=0; i<manifest.record_count(); i++)
         {
             const vector<string>& x = manifest[i];
@@ -186,11 +186,11 @@ TEST(manifest, root_path)
         ofstream f(manifest_file);
         for (int i = 0; i < 10; i++)
         {
-            f << "/t1/image" << i << ".png" << manifest_csv::get_delimiter();
+            f << "/t1/image" << i << ".png" << manifest_file::get_delimiter();
             f << "/t1/target" << i << ".txt\n";
         }
         f.close();
-        nervana::manifest_csv manifest(manifest_file, false, "/x1");
+        nervana::manifest_file manifest(manifest_file, false, "/x1");
         for (int i=0; i<manifest.record_count(); i++)
         {
             const vector<string>& x = manifest[i];
@@ -208,11 +208,11 @@ TEST(manifest, root_path)
         ofstream f(manifest_file);
         for (int i = 0; i < 10; i++)
         {
-            f << "t1/image" << i << ".png" << manifest_csv::get_delimiter();
+            f << "t1/image" << i << ".png" << manifest_file::get_delimiter();
             f << "t1/target" << i << ".txt\n";
         }
         f.close();
-        nervana::manifest_csv manifest(manifest_file, false, "/x1");
+        nervana::manifest_file manifest(manifest_file, false, "/x1");
         for (int i=0; i<manifest.record_count(); i++)
         {
             const vector<string>& x = manifest[i];
@@ -260,7 +260,7 @@ TEST(manifest, file_implicit)
         }
     }
 
-    manifest_csv manifest{ss, false, test_data_directory};
+    manifest_file manifest{ss, false, test_data_directory};
     size_t block_size = 16;
 
     block_loader_file_async bload{&manifest, block_size};
@@ -302,7 +302,7 @@ TEST(manifest, file_explicit)
         }
     }
 
-    manifest_csv manifest{ss, false, test_data_directory};
+    manifest_file manifest{ss, false, test_data_directory};
     size_t block_size = 16;
 
     auto types = manifest.get_element_types();
@@ -354,7 +354,7 @@ TEST(manifest, binary)
         }
     }
 
-    manifest_csv manifest{ss, false, test_data_directory};
+    manifest_file manifest{ss, false, test_data_directory};
     size_t block_size = 16;
 
 //    for (auto data : manifest)
@@ -405,7 +405,7 @@ TEST(manifest, string)
         }
     }
 
-    manifest_csv manifest{ss, false, test_data_directory};
+    manifest_file manifest{ss, false, test_data_directory};
     size_t block_size = 16;
 
 //    for (auto data : manifest)
@@ -472,10 +472,10 @@ TEST(manifest, ascii_float)
 //    }
 
 //    // Parse the manifest file
-//    shared_ptr<manifest_csv> manifest;
+//    shared_ptr<manifest_file> manifest;
 //    {
 //        auto startTime = timer.now();
-//        manifest = make_shared<manifest_csv>(manifest_filename, false);
+//        manifest = make_shared<manifest_file>(manifest_filename, false);
 //        auto endTime = timer.now();
 //        cout << "load manifest " << (chrono::duration_cast<chrono::milliseconds>(endTime - startTime)).count()  << " ms" << endl;
 //    }
