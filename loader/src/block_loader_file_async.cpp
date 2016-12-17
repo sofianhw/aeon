@@ -35,12 +35,8 @@ block_loader_file_async::block_loader_file_async(manifest_file* manifest, size_t
     , m_record_count{manifest->record_count()}
     , m_manifest(*manifest)
 {
-    INFO << "file loader requested block size " << m_block_size;
     m_block_count = round((float)m_manifest.record_count() / (float)m_block_size);
     m_block_size = ceil((float)m_manifest.record_count() / (float)m_block_count);
-    INFO << "file loader new block size " << m_block_size;
-    INFO << "file loader record count " << m_manifest.record_count();
-    INFO << "file loader m_block_count " << m_block_count;
     m_elements_per_record = element_count();
     for (int k = 0; k < 2; ++k)
     {
@@ -53,7 +49,6 @@ block_loader_file_async::block_loader_file_async(manifest_file* manifest, size_t
 
 nervana::variable_buffer_array* block_loader_file_async::filler()
 {
-    INFO;
     variable_buffer_array* rc = get_pending_buffer();
 
     for (size_t i = 0; i < m_elements_per_record; ++i)
@@ -124,7 +119,6 @@ nervana::variable_buffer_array* block_loader_file_async::filler()
         rc = nullptr;
     }
 
-    INFO << (rc ? "valid" : "nullptr");
     return rc;
 }
 

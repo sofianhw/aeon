@@ -79,7 +79,6 @@ nervana::block_manager_async::block_manager_async(block_loader_source_async* fil
 
 nervana::variable_buffer_array* block_manager_async::filler()
 {
-    INFO;
     variable_buffer_array* rc = get_pending_buffer();
     variable_buffer_array* input = nullptr;
 
@@ -166,7 +165,6 @@ nervana::variable_buffer_array* block_manager_async::filler()
         rc = nullptr;
     }
 
-    INFO << (rc ? "valid" : "nullptr");
     return rc;
 }
 

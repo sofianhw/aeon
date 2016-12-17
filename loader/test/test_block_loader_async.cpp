@@ -46,26 +46,20 @@ TEST(block_loader_async, file_block)
 
     auto block_count = loader.block_count();
 
-    INFO << block_count;
     for (int block = 0; block < block_count; ++block)
     {
-        INFO;
         auto data = *loader.next();
-        INFO;
 
         for (int item = 0; item < block_size; ++item)
         {
-            INFO;
             uint* object_data = (uint*)data[0].get_item(item).data();
             uint* target_data = (uint*)data[1].get_item(item).data();
             for (int offset = 0; offset < object_size / sizeof(uint); offset++)
             {
                 EXPECT_EQ(object_data[offset] + 1, target_data[offset]);
             }
-            INFO;
         }
     }
-    INFO;
 }
 
 TEST(block_loader_async, file_block_odd)

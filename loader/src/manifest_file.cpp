@@ -191,10 +191,7 @@ void manifest_file::initialize(std::istream& stream, size_t block_size, bool shu
     m_record_count = record_list.size();
 
     // now that we have a list of all records, create blocks
-    INFO << "m_record_count " << m_record_count;
-    INFO << "block_size " << block_size;
     std::vector<block_info> block_list = generate_block_list(m_record_count, block_size);
-    INFO << "block_list.size() " << block_list.size();
     for (auto info : block_list)
     {
         vector<vector<string>> block;
@@ -213,15 +210,12 @@ const std::vector<manifest_file::element_t>& manifest_file::get_element_types() 
 
 vector<vector<string>>* manifest_file::next()
 {
-    INFO << "m_counter " << m_counter;
-    INFO << "m_block_list.size() " << m_block_list.size();
     vector<vector<string>>* rc = nullptr;
     if (m_counter < m_block_list.size())
     {
         rc = &(m_block_list[m_counter]);
         m_counter++;
     }
-    INFO << (rc ? "valid" : "nullptr");
     return rc;
 }
 
