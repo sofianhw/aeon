@@ -129,7 +129,7 @@ TEST(block_manager, build_cache)
     ASSERT_EQ(0, target_size % sizeof(uint32_t));
 
     auto manifest_path = mm.tmp_manifest_file(record_count, {object_size, target_size});
-    manifest_file manifest(manifest_path, false);
+    manifest_file manifest(manifest_path, false, "", 1.0, block_size);
 
     block_loader_file_async file_reader(&manifest, block_size);
     string cache_name = block_manager_async::create_cache_name(file_reader.get_uid());
@@ -190,7 +190,7 @@ TEST(block_manager, reuse_cache)
     ASSERT_EQ(0, target_size % sizeof(uint32_t));
 
     auto manifest_path = mm.tmp_manifest_file(record_count, {object_size, target_size});
-    manifest_file manifest(manifest_path, false);
+    manifest_file manifest(manifest_path, false, "", 1.0, block_size);
 
     // first build the cache
     {

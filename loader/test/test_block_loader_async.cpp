@@ -75,7 +75,7 @@ TEST(block_loader_async, file_block_odd)
 
     // each call to next() will yield pointer to vector<string> (filename list per record)
     auto manifest_path = mm.tmp_manifest_file(record_count, {object_size, target_size});
-    manifest_file manifest(manifest_path, false);
+    manifest_file manifest(manifest_path, false, "", 1.0, block_size);
 
     // each call to next() will yield pointer to variable buffer_array
     //   which is vector of buffer_variable_size_elements
