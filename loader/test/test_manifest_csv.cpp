@@ -260,8 +260,8 @@ TEST(manifest, file_implicit)
         }
     }
 
-    manifest_file manifest{ss, false, test_data_directory};
     size_t block_size = 16;
+    manifest_file manifest{ss, false, test_data_directory, 1.0, block_size};
 
     block_loader_file_async bload{&manifest, block_size};
 
@@ -302,8 +302,8 @@ TEST(manifest, file_explicit)
         }
     }
 
-    manifest_file manifest{ss, false, test_data_directory};
     size_t block_size = 16;
+    manifest_file manifest{ss, false, test_data_directory, 1.0, block_size};
 
     auto types = manifest.get_element_types();
     ASSERT_EQ(2, types.size());
@@ -354,8 +354,8 @@ TEST(manifest, binary)
         }
     }
 
-    manifest_file manifest{ss, false, test_data_directory};
     size_t block_size = 16;
+    manifest_file manifest{ss, false, test_data_directory, 1.0, block_size};
 
 //    for (auto data : manifest)
 //    {
@@ -405,8 +405,8 @@ TEST(manifest, string)
         }
     }
 
-    manifest_file manifest{ss, false, test_data_directory};
     size_t block_size = 16;
+    manifest_file manifest{ss, false, test_data_directory, 1.0, block_size};
 
 //    for (auto data : manifest)
 //    {
