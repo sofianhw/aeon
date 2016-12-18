@@ -14,147 +14,135 @@
 */
 
 #include "gtest/gtest.h"
+#include "async_manager.hpp"
+#include "manifest_file.hpp"
 #include "block_loader_file_async.hpp"
+#include "batch_iterator_async.hpp"
 #include "manifest_maker.hpp"
 #include "file_util.hpp"
+#include "log.hpp"
 
 using namespace std;
 using namespace nervana;
 
-TEST(block_loader_file, constructor)
-{
-    manifest_maker    mm;
-    string            tmpname = mm.tmp_manifest_file(0, {0, 0});
-    block_loader_file blf(make_shared<nervana::manifest_file>(tmpname, true), 1.0, 4);
-}
-
-TEST(block_loader_file, load_block)
+TEST(block_loader_file, file_block)
 {
     manifest_maker mm;
+
     // load one block of size 2
-    uint32_t block_size      = 2;
-    uint32_t object_size     = 16;
-    uint32_t target_size     = 16;
-    float    subset_fraction = 1.0;
+    size_t record_count    = 20;
+    size_t block_size      = 2;
+    size_t object_size     = 16;
+    size_t target_size     = 16;
+    // float    subset_fraction = 1.0;
 
-    auto manifest_file = mm.tmp_manifest_file(4, {object_size, target_size});
-    auto manifest = make_shared<manifest_file>(manifest_file, true);
-    block_loader_file_async blf(manifest, subset_fraction, block_size);
+    // each call to next() will yield pointer to vector<string> (filename list per record)
+    auto manifest_path = mm.tmp_manifest_file(record_count, {object_size, target_size});
+    manifest_file manifest(manifest_path, false);
 
-    buffer_in_array bp(2);
+    // each call to next() will yield pointer to variable buffer_array
+    //   which is vector of buffer_variable_size_elements
+    block_loader_file_async loader(&manifest, block_size);
 
-    blf.load_block(bp, 0);
+    auto block_count = loader.block_count();
 
-    // the object_data and target_data should be full of repeating
-    // uints.  the uints in target_data will be 1 bigger than the uints
-    // in object_data.  Make sure that this is the case here.
-    for (int block = 0; block < block_size; block++)
+    for (int block = 0; block < block_count; ++block)
     {
-        uint* object_data = (uint*)bp[0]->get_item(block).data();
-        uint* target_data = (uint*)bp[1]->get_item(block).data();
-        for (int offset = 0; offset < object_size / sizeof(uint); offset++)
+        auto data = *loader.next();
+
+        for (int item = 0; item < block_size; ++item)
         {
-            EXPECT_EQ(object_data[offset] + 1, target_data[offset]);
+            uint* object_data = (uint*)data[0].get_item(item).data();
+            uint* target_data = (uint*)data[1].get_item(item).data();
+            for (int offset = 0; offset < object_size / sizeof(uint); offset++)
+            {
+                EXPECT_EQ(object_data[offset] + 1, target_data[offset]);
+            }
         }
     }
 }
 
-TEST(block_loader_file, subset_fraction)
-{
-    // a 10 object manifest iterated through blocks sized 4 with
-    // percentSubset 50 should result in an output block size of 2, 2
-    // and then 1.
-    manifest_maker mm;
-    uint32_t       block_size      = 4;
-    uint32_t       object_size     = 4;
-    uint32_t       target_size     = 4;
-    float          subset_fraction = 0.01;
-    size_t         total_records   = 1000;
-
-    block_loader_file blf(make_shared<nervana::manifest_file>(mm.tmp_manifest_file(total_records, {object_size, target_size}), true),
-                          subset_fraction, block_size);
-
-    EXPECT_EQ(blf.record_count(), size_t(total_records * subset_fraction));
-
-    buffer_in_array bp(2);
-
-    blf.load_block(bp, 0);
-    ASSERT_EQ(bp[0]->record_count(), 4);
-    bp[0]->reset();
-
-    blf.load_block(bp, 1);
-    ASSERT_EQ(bp[0]->record_count(), 4);
-    bp[0]->reset();
-
-    blf.load_block(bp, 2);
-    ASSERT_EQ(bp[0]->record_count(), 2);
-    bp[0]->reset();
-}
-
-TEST(block_loader_file, exception)
+TEST(block_loader_file, file_block_odd)
 {
     manifest_maker mm;
-    float          subset_fraction = 1.0;
 
-    block_loader_file blf(make_shared<nervana::manifest_file>(mm.tmp_manifest_file_with_invalid_filename(), false), subset_fraction,
-                          1);
+    // load one block of size 2
+    size_t record_count    = 3;
+    size_t block_size      = 2;
+    size_t object_size     = 16;
+    size_t target_size     = 16;
+    // float    subset_fraction = 1.0;
 
-    buffer_in_array bp(2);
+    // each call to next() will yield pointer to vector<string> (filename list per record)
+    auto manifest_path = mm.tmp_manifest_file(record_count, {object_size, target_size});
+    manifest_file manifest(manifest_path, false, "", 1.0, block_size);
 
-    // loadBlock doesn't actually raise the exception
-    blf.load_block(bp, 0);
+    // each call to next() will yield pointer to variable buffer_array
+    //   which is vector of buffer_variable_size_elements
+    block_loader_file_async loader(&manifest, block_size);
 
-    // Could not find file exception raised when we try to access the item
-    try
+    auto block_count = ceil((float)record_count / (float)block_size);
+    ASSERT_EQ(2, block_count);
+
     {
-        bp[0]->get_item(0);
-        FAIL();
+        variable_buffer_array& data = *loader.next();
+        ASSERT_EQ(2, data.size());
+        buffer_variable_size_elements& data0 = data[0];
+        buffer_variable_size_elements& data1 = data[1];
+        ASSERT_EQ(2, data0.size());
+        ASSERT_EQ(2, data1.size());
     }
-    catch (std::exception& e)
+
     {
-        ASSERT_EQ(string("Could not find "), string(e.what()).substr(0, 15));
+        variable_buffer_array& data = *loader.next();
+        ASSERT_EQ(2, data.size());
+        buffer_variable_size_elements& data0 = data[0];
+        buffer_variable_size_elements& data1 = data[1];
+        ASSERT_EQ(1, data0.size());
+        ASSERT_EQ(1, data1.size());
     }
 }
 
-// TEST(block_loader_file, subset_record_count)
-//{
-//    manifest_maker mm;
-//    float subset_fraction = 0.5;
-//    block_loader_file blf(
-//        make_shared<nervana::manifest_file>(mm.tmp_manifest_file(13, {16, 16}), false),
-//        subset_fraction,
-//        5
-//    );
-
-//    ASSERT_EQ(blf.record_count(), 2 + 2 + 1);
-//}
-
-TEST(block_loader_file, performance)
+TEST(block_loader_file, iterate_batch)
 {
     manifest_maker mm;
-    uint32_t       block_size      = 50;
-    uint32_t       object_size     = 4;
-    uint32_t       target_size     = 4;
-    float          subset_fraction = 1.0;
-    string         cache_id        = block_loader_random::randomString();
-    string         version         = "version123";
 
-    auto blf = make_shared<block_loader_file>(
-        make_shared<nervana::manifest_file>(mm.tmp_manifest_file(1000, {object_size, target_size}), true), subset_fraction,
-        block_size);
+    // load one block of size 2
+    size_t record_count    = 100;
+    size_t block_size      = 10;
+    size_t batch_size      = 4;
+    size_t object_size     = 16;
+    size_t target_size     = 16;
+    // float    subset_fraction = 1.0;
 
-    string                        cache_dir = file_util::make_temp_directory();
-    chrono::high_resolution_clock timer;
-    auto                          cache = make_shared<block_loader_cpio_cache>(cache_dir, cache_id, version, blf);
-    block_iterator_shuffled       iter(cache);
+    // each call to next() will yield pointer to vector<string> (filename list per record)
+    auto manifest_path = mm.tmp_manifest_file(record_count, {object_size, target_size});
+    manifest_file manifest(manifest_path, false);
 
-    auto startTime = timer.now();
-    for (int i = 0; i < 30; i++)
+    // each call to next() will yield pointer to variable buffer_array
+    //   which is vector of buffer_variable_size_elements
+    block_loader_file_async blf(&manifest, block_size);
+    block_manager_async block_manager(&blf, block_size, "", false);
+    batch_iterator_async biter(&block_manager, batch_size);
+
+    auto batch_count = record_count / batch_size;
+
+    for (int batch = 0; batch < batch_count; ++batch)
     {
-        buffer_in_array dest(2);
-        iter.read(dest);
+        auto b1 = biter.next();
+        ASSERT_NE(nullptr, b1);
+        auto b = *b1;
+        for (int item = 0; item < batch_size; ++item)
+        {
+            uint* object_data = (uint*)b[0].get_item(item).data();
+            uint* target_data = (uint*)b[1].get_item(item).data();
+            for (int offset = 0; offset < object_size / sizeof(uint); offset++)
+            {
+                EXPECT_EQ(object_data[offset] + 1, target_data[offset]);
+                // INFO << "batch_iter " << object_data[offset] << " " << offset << ", " << item <<  ", " << batch << ", " << batch_size;
+                EXPECT_EQ(object_data[offset], 2 * (batch * batch_size + item));
+            }
+        }
     }
-    auto endTime = timer.now();
-    cout << "time " << (chrono::duration_cast<chrono::milliseconds>(endTime - startTime)).count() << " ms" << endl;
-    file_util::remove_directory(cache_dir);
 }
+
