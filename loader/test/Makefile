@@ -29,7 +29,7 @@ TEST_SRCS := \
     main.cpp \
     test_audio.cpp \
     test_bbox.cpp \
-    test_block_loader_async.cpp \
+    test_block_loader_file.cpp \
     test_block_manager.cpp \
     test_char_map.cpp \
     test_image.cpp \
