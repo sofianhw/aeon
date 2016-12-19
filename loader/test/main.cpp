@@ -47,7 +47,6 @@ public:
 
     ~mock_nds_server()
     {
-        m_server.stop();
     }
 
     void set_elements_per_record(initializer_list<int> init)

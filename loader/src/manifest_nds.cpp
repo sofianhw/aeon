@@ -23,6 +23,7 @@
 #include "json.hpp"
 #include "manifest_nds.hpp"
 #include "interface.hpp"
+#include "cpio.hpp"
 
 using namespace std;
 using namespace nervana;
@@ -35,6 +36,7 @@ manifest_nds::manifest_nds(const std::string& baseurl, const std::string& token,
     , m_shard_count(shard_count)
     , m_shard_index(shard_index)
 {
+    load_metadata();
     // // parse json
     // nlohmann::json j;
     // try
@@ -84,6 +86,32 @@ variable_buffer_array* manifest_nds::next()
     //     rc = &(m_block_list[m_counter]);
     //     m_counter++;
     // }
+    return rc;
+}
+
+vector<vector<char>> manifest_nds::load_block(uint32_t block_num)
+{
+    // not much use in mutlithreading here since in most cases, our next step is
+    // to shuffle the entire BufferPair, which requires the entire buffer loaded.
+    vector<vector<char>> rc;
+
+    // get data from url and write it into cpio_stream
+    stringstream stream;
+    get(load_block_url(block_num), stream);
+
+    // parse cpio_stream into dest one record (consisting of multiple elements) at a time
+    nervana::cpio::reader reader(stream);
+    while (stream)
+    {
+        vector<char> buffer;
+        string filename = reader.read(buffer);
+        INFO << filename;
+        if (filename == cpio::CPIO_TRAILER || filename == cpio::AEON_TRAILER)
+        {
+            break;
+        }
+        rc.push_back(move(buffer));
+    }
     return rc;
 }
 
@@ -187,8 +215,9 @@ void manifest_nds::load_metadata()
 
     stringstream json_stream;
     get(metadata_url(), json_stream);
-    string         json_str = json_stream.str();
+    string json_str = json_stream.str();
     nlohmann::json metadata;
+
     try
     {
         metadata = nlohmann::json::parse(json_str);
