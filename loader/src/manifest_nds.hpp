@@ -23,15 +23,38 @@
 
 namespace nervana
 {
+    class manifest_nds_builder;
     class manifest_nds;
 }
+
+class nervana::manifest_nds_builder
+{
+public:
+    manifest_nds_builder& base_url(const std::string& url);
+    manifest_nds_builder& token(const std::string& token);
+    manifest_nds_builder& collection_id(size_t collection_id);
+    manifest_nds_builder& block_size(size_t block_size);
+    manifest_nds_builder& elements_per_record(size_t elements_per_record);
+    manifest_nds_builder& shard_count(size_t shard_count);
+    manifest_nds_builder& shard_index(size_t shard_index);
+    manifest_nds create();
+
+private:
+    std::string   m_base_url;
+    std::string   m_token;
+    size_t        m_collection_id = -1;
+    size_t        m_block_size = 5000;
+    size_t        m_elements_per_record = -1;
+    size_t        m_shard_count = 1;
+    size_t        m_shard_index = 0;
+};
 
 class nervana::manifest_nds : public nervana::async_manager_source<variable_buffer_array>,
                               public nervana::manifest
 {
+    friend class manifest_nds_builder;
+
 public:
-    manifest_nds(const std::string& baseurl, const std::string& token, size_t collection_id, size_t block_size,
-                 size_t shard_count = 1, size_t shard_index = 0);
     ~manifest_nds()
     {
     }
@@ -56,7 +79,7 @@ public:
         return m_block_count;
     }
 
-    std::vector<std::vector<char>> load_block(size_t block_index);
+    variable_buffer_array load_block(size_t block_index);
 
     std::string cache_id() override;
 
@@ -69,15 +92,20 @@ public:
     const std::string load_block_url(size_t block_index);
     const std::string metadata_url();
 
-    std::string m_baseurl;
-    std::string m_token;
-    int         m_collection_id;
-    size_t      m_block_size;
-    const size_t             m_shard_count;
-    const size_t             m_shard_index;
-    size_t m_record_count;
-    size_t m_block_count;
+    const std::string   m_base_url;
+    const std::string   m_token;
+    const size_t        m_collection_id;
+    const size_t        m_block_size;
+    const size_t        m_elements_per_record;
+    const size_t        m_shard_count;
+    const size_t        m_shard_index;
+    size_t              m_record_count;
+    size_t              m_block_count;
 
 private:
+    manifest_nds() = delete;
+    manifest_nds(const std::string& base_url, const std::string& token, size_t collection_id, size_t block_size,
+                 size_t elements_per_record, size_t shard_count, size_t shard_index);
+
     static size_t write_data(void* ptr, size_t size, size_t nmemb, void* stream);
 };

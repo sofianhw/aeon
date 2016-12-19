@@ -151,7 +151,8 @@ TEST(DISABLED_curl,test)
 
 TEST(block_loader_nds, curl_stream)
 {
-    manifest_nds client("http://127.0.0.1:5000", "token", 1, 16, 1, 0);
+    manifest_nds client = manifest_nds_builder().base_url("http://127.0.0.1:5000")
+            .token("token").collection_id(1).block_size(16).elements_per_record(2).create();
 
     stringstream stream;
     client.get("http://127.0.0.1:5000/test_pattern/", stream);
@@ -166,7 +167,8 @@ TEST(block_loader_nds, curl_stream)
 
 TEST(block_loader_nds, curl_stream_error)
 {
-    manifest_nds client("http://127.0.0.1:5000", "token", 1, 16, 1, 0);
+    manifest_nds client = manifest_nds_builder().base_url("http://127.0.0.1:5000")
+            .token("token").collection_id(1).block_size(16).elements_per_record(2).create();
 
     stringstream stream;
     EXPECT_THROW(client.get("http://127.0.0.1:5000/error", stream), std::runtime_error);
@@ -174,7 +176,8 @@ TEST(block_loader_nds, curl_stream_error)
 
 TEST(block_loader_nds, record_count)
 {
-    manifest_nds client("http://127.0.0.1:5000", "token", 1, 16, 1, 0);
+    manifest_nds client = manifest_nds_builder().base_url("http://127.0.0.1:5000")
+            .token("token").collection_id(1).block_size(16).elements_per_record(2).create();
 
     // 200 and 5 are hard coded in the mock nds server
     ASSERT_EQ(client.record_count(), 200);
@@ -183,13 +186,14 @@ TEST(block_loader_nds, record_count)
 
 TEST(block_loader_nds, cpio)
 {
-    manifest_nds client("http://127.0.0.1:5000", "token", 1, 16, 1, 0);
+    manifest_nds client = manifest_nds_builder().base_url("http://127.0.0.1:5000")
+            .token("token").collection_id(1).block_size(16).elements_per_record(2).create();
 
 //     buffer_in_array dest(2);
 //     ASSERT_EQ(dest.size(), 2);
 //     ASSERT_EQ(dest[0]->record_count(), 0);
 
-    client.load_block(0);
+    variable_buffer_array block = client.load_block(0);
 
 //     ASSERT_EQ(dest[0]->record_count(), 2);
 }

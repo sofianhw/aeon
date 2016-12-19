@@ -28,12 +28,78 @@
 using namespace std;
 using namespace nervana;
 
-manifest_nds::manifest_nds(const std::string& baseurl, const std::string& token, size_t collection_id, size_t block_size,
-                           size_t shard_count, size_t shard_index)
-    : m_baseurl(baseurl)
+manifest_nds_builder& manifest_nds_builder::base_url(const std::string& url)
+{
+    m_base_url = url;
+    return *this;
+}
+
+manifest_nds_builder& manifest_nds_builder::token(const std::string& token)
+{
+    m_token = token;
+    return *this;
+}
+
+manifest_nds_builder& manifest_nds_builder::collection_id(size_t collection_id)
+{
+    m_collection_id = collection_id;
+    return *this;
+}
+
+manifest_nds_builder& manifest_nds_builder::block_size(size_t block_size)
+{
+    m_block_size = block_size;
+    return *this;
+}
+
+manifest_nds_builder& manifest_nds_builder::elements_per_record(size_t elements_per_record)
+{
+    m_elements_per_record = elements_per_record;
+    return *this;
+}
+
+manifest_nds_builder& manifest_nds_builder::shard_count(size_t shard_count)
+{
+    m_shard_count = shard_count;
+    return *this;
+}
+
+manifest_nds_builder& manifest_nds_builder::shard_index(size_t shard_index)
+{
+    m_shard_index = shard_index;
+    return *this;
+}
+
+manifest_nds manifest_nds_builder::create()
+{
+    if (m_base_url == "")
+    {
+        throw invalid_argument("base_url is required");
+    }
+    if (m_token == "")
+    {
+        throw invalid_argument("token is required");
+    }
+    if (m_collection_id == -1)
+    {
+        throw invalid_argument("collection_id is required");
+    }
+    if (m_elements_per_record == -1)
+    {
+        throw invalid_argument("elements_per_record is required");
+    }
+
+    return manifest_nds(m_base_url, m_token, m_collection_id, m_block_size, m_elements_per_record, m_shard_count, m_shard_index);
+}
+
+
+manifest_nds::manifest_nds(const std::string& base_url, const std::string& token, size_t collection_id, size_t block_size,
+                           size_t elements_per_record, size_t shard_count, size_t shard_index)
+    : m_base_url(base_url)
     , m_token(token)
     , m_collection_id(collection_id)
     , m_block_size(block_size)
+    , m_elements_per_record(elements_per_record)
     , m_shard_count(shard_count)
     , m_shard_index(shard_index)
 {
@@ -90,11 +156,15 @@ variable_buffer_array* manifest_nds::next()
     return rc;
 }
 
-vector<vector<char>> manifest_nds::load_block(size_t block_index)
+variable_buffer_array manifest_nds::load_block(size_t block_index)
 {
     // not much use in mutlithreading here since in most cases, our next step is
     // to shuffle the entire BufferPair, which requires the entire buffer loaded.
-    vector<vector<char>> rc;
+    variable_buffer_array rc;
+    for (size_t i=0; i<m_elements_per_record; i++)
+    {
+        rc.emplace_back();
+    }
 
     // get data from url and write it into cpio_stream
     stringstream stream;
@@ -102,15 +172,19 @@ vector<vector<char>> manifest_nds::load_block(size_t block_index)
 
     // parse cpio_stream into dest one record (consisting of multiple elements) at a time
     nervana::cpio::reader reader(stream);
-    while (stream)
+    size_t record_count = reader.record_count();
+    for (size_t record=0; record<record_count; record++)
     {
-        vector<char> buffer;
-        string filename = reader.read(buffer);
-        if (filename == cpio::CPIO_TRAILER || filename == cpio::AEON_TRAILER)
+        for (size_t element=0; element<m_elements_per_record; element++)
         {
-            break;
+            vector<char> buffer;
+            string filename = reader.read(buffer);
+            if (filename == cpio::CPIO_TRAILER || filename == cpio::AEON_TRAILER)
+            {
+                break;
+            }
+            rc[element].add_item(buffer);
         }
-        rc.push_back(move(buffer));
     }
     return rc;
 }
@@ -118,7 +192,7 @@ vector<vector<char>> manifest_nds::load_block(size_t block_index)
 string manifest_nds::cache_id()
 {
     stringstream contents;
-    contents << m_baseurl << m_collection_id;
+    contents << m_base_url << m_collection_id;
     std::size_t  h = std::hash<std::string>()(contents.str());
     stringstream ss;
     ss << std::hex << h;
@@ -187,7 +261,7 @@ void manifest_nds::get(const string& url, stringstream& stream)
 const string manifest_nds::load_block_url(size_t block_index)
 {
     stringstream ss;
-    ss << m_baseurl << "/macrobatch/?";
+    ss << m_base_url << "/macrobatch/?";
     ss << "macro_batch_index=" << block_index;
     ss << "&macro_batch_max_size=" << m_block_size;
     ss << "&collection_id=" << m_collection_id;
@@ -200,7 +274,7 @@ const string manifest_nds::load_block_url(size_t block_index)
 const string manifest_nds::metadata_url()
 {
     stringstream ss;
-    ss << m_baseurl << "/object_count/?";
+    ss << m_base_url << "/object_count/?";
     ss << "macro_batch_max_size=" << m_block_size;
     ss << "&collection_id=" << m_collection_id;
     ss << "&shard_count=" << m_shard_count;
