@@ -31,7 +31,7 @@ class nervana::manifest_nds : public nervana::async_manager_source<variable_buff
 {
 public:
     manifest_nds(const std::string& baseurl, const std::string& token, size_t collection_id, size_t block_size,
-                     size_t shard_count = 1, size_t shard_index = 0);
+                 size_t shard_count = 1, size_t shard_index = 0);
     ~manifest_nds()
     {
     }
@@ -56,7 +56,7 @@ public:
         return m_block_count;
     }
 
-    std::vector<std::vector<char>> load_block(uint32_t block_num);
+    std::vector<std::vector<char>> load_block(size_t block_index);
 
     std::string cache_id() override;
 
@@ -66,7 +66,7 @@ public:
 
     void load_metadata();
     void get(const std::string& url, std::stringstream& stream);
-    const std::string load_block_url(uint32_t block_num);
+    const std::string load_block_url(size_t block_index);
     const std::string metadata_url();
 
     std::string m_baseurl;

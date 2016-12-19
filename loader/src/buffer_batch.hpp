@@ -38,7 +38,6 @@ namespace nervana
     typedef std::vector<buffer_variable_size_elements> variable_buffer_array;
     typedef std::pair<std::vector<char>,std::exception_ptr> variable_record_field;
     typedef std::vector<nervana::variable_record_field> variable_record_field_list;
-
 }
 
 class nervana::buffer_variable_size_elements

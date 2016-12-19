@@ -164,35 +164,35 @@ TEST(block_loader_nds, curl_stream)
     ASSERT_EQ(stream.str(), expected.str());
 }
 
- TEST(block_loader_nds, curl_stream_error)
- {
-     manifest_nds client("http://127.0.0.1:5000", "token", 1, 16, 1, 0);
+TEST(block_loader_nds, curl_stream_error)
+{
+    manifest_nds client("http://127.0.0.1:5000", "token", 1, 16, 1, 0);
 
-     stringstream stream;
-     EXPECT_THROW(client.get("http://127.0.0.1:5000/error", stream), std::runtime_error);
- }
+    stringstream stream;
+    EXPECT_THROW(client.get("http://127.0.0.1:5000/error", stream), std::runtime_error);
+}
 
- TEST(block_loader_nds, record_count)
- {
-     manifest_nds client("http://127.0.0.1:5000", "token", 1, 16, 1, 0);
+TEST(block_loader_nds, record_count)
+{
+    manifest_nds client("http://127.0.0.1:5000", "token", 1, 16, 1, 0);
 
-     // 200 and 5 are hard coded in the mock nds server
-     ASSERT_EQ(client.record_count(), 200);
-     ASSERT_EQ(client.block_count(), 5);
- }
+    // 200 and 5 are hard coded in the mock nds server
+    ASSERT_EQ(client.record_count(), 200);
+    ASSERT_EQ(client.block_count(), 5);
+}
 
- TEST(block_loader_nds, cpio)
- {
-     manifest_nds client("http://127.0.0.1:5000", "token", 1, 16, 1, 0);
+TEST(block_loader_nds, cpio)
+{
+    manifest_nds client("http://127.0.0.1:5000", "token", 1, 16, 1, 0);
 
 //     buffer_in_array dest(2);
 //     ASSERT_EQ(dest.size(), 2);
 //     ASSERT_EQ(dest[0]->record_count(), 0);
 
-     client.load_block(0);
+    client.load_block(0);
 
- //    ASSERT_EQ(dest[0]->record_count(), 2);
- }
+//     ASSERT_EQ(dest[0]->record_count(), 2);
+}
 
 // TEST(block_loader_nds, multiblock_sequential)
 // {

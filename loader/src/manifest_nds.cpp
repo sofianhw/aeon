@@ -29,10 +29,11 @@ using namespace std;
 using namespace nervana;
 
 manifest_nds::manifest_nds(const std::string& baseurl, const std::string& token, size_t collection_id, size_t block_size,
-                     size_t shard_count, size_t shard_index)
+                           size_t shard_count, size_t shard_index)
     : m_baseurl(baseurl)
     , m_token(token)
     , m_collection_id(collection_id)
+    , m_block_size(block_size)
     , m_shard_count(shard_count)
     , m_shard_index(shard_index)
 {
@@ -89,7 +90,7 @@ variable_buffer_array* manifest_nds::next()
     return rc;
 }
 
-vector<vector<char>> manifest_nds::load_block(uint32_t block_num)
+vector<vector<char>> manifest_nds::load_block(size_t block_index)
 {
     // not much use in mutlithreading here since in most cases, our next step is
     // to shuffle the entire BufferPair, which requires the entire buffer loaded.
@@ -97,7 +98,7 @@ vector<vector<char>> manifest_nds::load_block(uint32_t block_num)
 
     // get data from url and write it into cpio_stream
     stringstream stream;
-    get(load_block_url(block_num), stream);
+    get(load_block_url(block_index), stream);
 
     // parse cpio_stream into dest one record (consisting of multiple elements) at a time
     nervana::cpio::reader reader(stream);
@@ -105,7 +106,6 @@ vector<vector<char>> manifest_nds::load_block(uint32_t block_num)
     {
         vector<char> buffer;
         string filename = reader.read(buffer);
-        INFO << filename;
         if (filename == cpio::CPIO_TRAILER || filename == cpio::AEON_TRAILER)
         {
             break;
@@ -184,11 +184,11 @@ void manifest_nds::get(const string& url, stringstream& stream)
     curl_easy_cleanup(m_curl);
 }
 
-const string manifest_nds::load_block_url(uint32_t block_num)
+const string manifest_nds::load_block_url(size_t block_index)
 {
     stringstream ss;
     ss << m_baseurl << "/macrobatch/?";
-    ss << "macro_batch_index=" << block_num;
+    ss << "macro_batch_index=" << block_index;
     ss << "&macro_batch_max_size=" << m_block_size;
     ss << "&collection_id=" << m_collection_id;
     ss << "&shard_count=" << m_shard_count;

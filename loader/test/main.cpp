@@ -51,7 +51,7 @@ public:
 
     void set_elements_per_record(initializer_list<int> init)
     {
-        m_elements_per_record = init;
+        m_elements_size_list = init;
     }
 
     void page_handler(web::page& page, const std::string& url)
@@ -68,28 +68,33 @@ public:
         else if (url == "/macrobatch/")
         {
             map<string,string> args = page.args();
-            int macro_batch_max_size = stod(args["macro_batch_max_size"]);
-//            int macro_batch_index = stod(args["macro_batch_index"]);
-//            int collection_id = stod(args["collection_id"]);
-//            string token = args["token"];
+            int block_size = stod(args["macro_batch_max_size"]);
+            int block_index = stod(args["macro_batch_index"]);
+            int collection_id = stod(args["collection_id"]);
+            string token = args["token"];
+            (void)block_index; (void)collection_id; (void)token; // silence warning
             stringstream ss;
             {
                 cpio::writer writer(ss);
-                for (int record_number=0; record_number<macro_batch_max_size; record_number++)
+                variable_buffer_array bin;
+                for (int element_number=0; element_number<m_elements_size_list.size(); element_number++)
                 {
-                    // buffer_in_array bin{(uint32_t)m_elements_per_record.size()};
-                    // for (int element_number=0; element_number<m_elements_per_record.size(); element_number++)
-                    // {
-                    //     vector<char> data(m_elements_per_record[element_number]);
-                    //     stringstream ss;
-                    //     ss << record_number << ":" << element_number;
-                    //     string id = ss.str();
-                    //     id.copy(data.data(), id.size());
-                    //     data[id.size()] = 0;
-                    //     bin[element_number]->add_item(data);
-                    // }
-                    // writer.write_all_records(bin);
+                    bin.emplace_back();
                 }
+                for (int record_number=0; record_number<block_size; record_number++)
+                {
+                     for (int element_number=0; element_number<m_elements_size_list.size(); element_number++)
+                     {
+                         vector<char> data(m_elements_size_list[element_number]);
+                         stringstream ss;
+                         ss << record_number << ":" << element_number;
+                         string id = ss.str();
+                         id.copy(data.data(), id.size());
+                         data[id.size()] = 0;
+                         bin[element_number].add_item(data);
+                     }
+                }
+                writer.write_all_records(bin);
             }
 
             string cpio_data = ss.str();
@@ -110,7 +115,7 @@ public:
 
 private:
     web::server m_server;
-    vector<int> m_elements_per_record = {1024, 8};
+    vector<int> m_elements_size_list = {1024, 32};
 };
 
 
