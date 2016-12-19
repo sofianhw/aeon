@@ -30,6 +30,7 @@ TEST_SRCS := \
     test_audio.cpp \
     test_bbox.cpp \
     test_block_loader_file.cpp \
+    test_block_loader_nds.cpp \
     test_block_manager.cpp \
     test_char_map.cpp \
     test_image.cpp \

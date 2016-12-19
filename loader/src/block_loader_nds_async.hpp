@@ -17,10 +17,6 @@
 
 #include <string>
 
-#include <curl/curl.h>
-#include <curl/easy.h>
-#include <curl/curlbuild.h>
-
 #include "block_loader_source_async.hpp"
 #include "manifest_file.hpp"
 #include "buffer_batch.hpp"
@@ -93,11 +89,6 @@ public:
     void set_block_loader_sequence(const std::vector<std::pair<size_t, size_t>>& seq)
     {
     }
-
-    void load_metadata();
-    void get(const std::string& url, std::stringstream& stream);
-    const std::string load_block_url(uint32_t block_num);
-    const std::string metadata_url();
 
 private:
     size_t        m_block_size;

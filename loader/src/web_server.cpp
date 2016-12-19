@@ -13,8 +13,6 @@
  limitations under the License.
 */
 
-#include "web_server.hpp"
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -30,6 +28,8 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <sys/ioctl.h>
+
+#include "web_server.hpp"
 
 using namespace std;
 
@@ -83,6 +83,7 @@ web::server::server()
 
 web::server::~server()
 {
+    stop();
 }
 
 void web::server::start(uint16_t port)
