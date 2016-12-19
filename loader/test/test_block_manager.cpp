@@ -140,14 +140,14 @@ TEST(block_manager, build_cache)
     size_t record_index = 0;
     for (size_t i=0; i<block_count*2; i++)
     {
-        variable_buffer_array* buffer = manager.next();
+        encoded_record_list* buffer = manager.next();
         ASSERT_NE(nullptr, buffer);
-        ASSERT_EQ(2, buffer->size());
+        ASSERT_EQ(block_size, buffer->size());
 
         for (size_t record=0; record<block_size; record++)
         {
-            auto data0 = (uint32_t*)buffer->at(0).get_item(record).data();
-            auto data1 = (uint32_t*)buffer->at(1).get_item(record).data();
+            auto data0 = (uint32_t*)buffer->record(record).element(0).data();
+            auto data1 = (uint32_t*)buffer->record(record).element(1).data();
             for (size_t offset = 0; offset < object_size / sizeof(uint32_t); offset++)
             {
                 EXPECT_EQ(data0[offset] + 1, data1[offset]);
@@ -201,14 +201,14 @@ TEST(block_manager, reuse_cache)
         size_t record_index = 0;
         for (size_t i=0; i<block_count; i++)
         {
-            variable_buffer_array* buffer = manager.next();
+            encoded_record_list* buffer = manager.next();
             ASSERT_NE(nullptr, buffer);
-            ASSERT_EQ(2, buffer->size());
+            ASSERT_EQ(4, buffer->size());
 
             for (size_t record=0; record<block_size; record++)
             {
-                auto data0 = (uint32_t*)buffer->at(0).get_item(record).data();
-                auto data1 = (uint32_t*)buffer->at(1).get_item(record).data();
+                auto data0 = (uint32_t*)buffer->record(record).element(0).data();
+                auto data1 = (uint32_t*)buffer->record(record).element(1).data();
                 for (size_t offset = 0; offset < object_size / sizeof(uint32_t); offset++)
                 {
                     EXPECT_EQ(data0[offset] + 1, data1[offset]);
@@ -230,14 +230,14 @@ TEST(block_manager, reuse_cache)
         size_t record_index = 0;
         for (size_t i=0; i<block_count; i++)
         {
-            variable_buffer_array* buffer = manager.next();
+            encoded_record_list* buffer = manager.next();
             ASSERT_NE(nullptr, buffer);
-            ASSERT_EQ(2, buffer->size());
+            ASSERT_EQ(4, buffer->size());
 
             for (size_t record=0; record<block_size; record++)
             {
-                auto data0 = (uint32_t*)buffer->at(0).get_item(record).data();
-                auto data1 = (uint32_t*)buffer->at(1).get_item(record).data();
+                auto data0 = (uint32_t*)buffer->record(record).element(0).data();
+                auto data1 = (uint32_t*)buffer->record(record).element(1).data();
                 for (size_t offset = 0; offset < object_size / sizeof(uint32_t); offset++)
                 {
                     EXPECT_EQ(data0[offset] + 1, data1[offset]);

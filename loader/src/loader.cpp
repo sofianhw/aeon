@@ -30,7 +30,7 @@ using namespace nervana;
 
 loader_async::loader_async(batch_iterator_async* b_itor, size_t batch_size, bool single_thread, bool pinned,
                            const std::shared_ptr<provider_interface>& prov)
-    : async_manager<variable_buffer_array, fixed_buffer_map>(b_itor)
+    : async_manager<encoded_record_list, fixed_buffer_map>(b_itor)
     , m_batch_size(batch_size)
 {
     // Note:  all we need are single_thread, batch_size, pinned + the provider template
@@ -79,7 +79,7 @@ loader_async::~loader_async()
 fixed_buffer_map* loader_async::filler()
 {
     fixed_buffer_map*      outputs = get_pending_buffer();
-    variable_buffer_array* inputs  = m_source->next();
+    encoded_record_list* inputs  = m_source->next();
 
     if (inputs == nullptr)
     {
@@ -111,13 +111,13 @@ fixed_buffer_map* loader_async::filler()
     return outputs;
 }
 
-void loader_async::work(int id, variable_buffer_array* in_buf, fixed_buffer_map* out_buf)
+void loader_async::work(int id, encoded_record_list* in_buf, fixed_buffer_map* out_buf)
 {
     // Thread function.
     // No locking required because threads write into non-overlapping regions.
     try
     {
-        affirm(in_buf->at(0).get_item_count() != 0, "input buffer pool is empty.");
+        affirm(in_buf->size() != 0, "input buffer pool is empty.");
 
         for (int item_idx = m_start_inds[id]; item_idx < m_end_inds[id]; item_idx++)
         {

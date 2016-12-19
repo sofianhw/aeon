@@ -34,7 +34,7 @@ namespace nervana
 }
 
 class nervana::block_manager_async
-    : public async_manager<variable_buffer_array, variable_buffer_array>
+    : public async_manager<encoded_record_list, encoded_record_list>
 {
 public:
     block_manager_async(block_loader_source_async* file_loader, size_t block_size, const std::string& cache_root, bool enable_shuffle);
@@ -44,7 +44,7 @@ public:
         finalize();
     }
 
-    variable_buffer_array* filler() override;
+    encoded_record_list* filler() override;
 
     size_t record_count() const override
     {
@@ -62,7 +62,7 @@ public:
     }
 
 private:
-    void move_src_to_dst(variable_buffer_array* src_array_ptr, variable_buffer_array* dst_array_ptr, size_t count);
+    void move_src_to_dst(encoded_record_list* src_array_ptr, encoded_record_list* dst_array_ptr, size_t count);
     static std::string create_cache_name(source_uid_t uid);
     static std::string create_cache_block_name(size_t block_number);
 

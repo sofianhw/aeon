@@ -41,7 +41,7 @@ public:
         finalize();
     }
 
-    variable_buffer_array* filler() override;
+    encoded_record_list* filler() override;
     void reset() override;
 
     size_t block_count() const override

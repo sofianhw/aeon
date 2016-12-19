@@ -49,7 +49,7 @@ private:
     size_t        m_shard_index = 0;
 };
 
-class nervana::manifest_nds : public nervana::async_manager_source<variable_buffer_array>,
+class nervana::manifest_nds : public nervana::async_manager_source<encoded_record_list>,
                               public nervana::manifest
 {
     friend class manifest_nds_builder;
@@ -59,7 +59,7 @@ public:
     {
     }
 
-    variable_buffer_array* next() override;
+    encoded_record_list* next() override;
     void reset() override
     {
     }
@@ -79,7 +79,7 @@ public:
         return m_block_count;
     }
 
-    variable_buffer_array load_block(size_t block_index);
+    encoded_record_list load_block(size_t block_index);
 
     std::string cache_id() override;
 

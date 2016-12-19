@@ -41,7 +41,7 @@ TEST(block_loader_file, file_block)
     manifest_file manifest(manifest_path, false);
 
     // each call to next() will yield pointer to variable buffer_array
-    //   which is vector of buffer_variable_size_elements
+    //   which is vector of encoded_record_list
     block_loader_file_async loader(&manifest, block_size);
 
     auto block_count = loader.block_count();
@@ -52,8 +52,8 @@ TEST(block_loader_file, file_block)
 
         for (int item = 0; item < block_size; ++item)
         {
-            uint* object_data = (uint*)data[0].get_item(item).data();
-            uint* target_data = (uint*)data[1].get_item(item).data();
+            uint* object_data = (uint*)data.record(item).element(0).data();
+            uint* target_data = (uint*)data.record(item).element(1).data();
             for (int offset = 0; offset < object_size / sizeof(uint); offset++)
             {
                 EXPECT_EQ(object_data[offset] + 1, target_data[offset]);
@@ -78,28 +78,22 @@ TEST(block_loader_file, file_block_odd)
     manifest_file manifest(manifest_path, false, "", 1.0, block_size);
 
     // each call to next() will yield pointer to variable buffer_array
-    //   which is vector of buffer_variable_size_elements
+    //   which is vector of encoded_record_list
     block_loader_file_async loader(&manifest, block_size);
 
     auto block_count = ceil((float)record_count / (float)block_size);
     ASSERT_EQ(2, block_count);
 
     {
-        variable_buffer_array& data = *loader.next();
+        encoded_record_list& data = *loader.next();
         ASSERT_EQ(2, data.size());
-        buffer_variable_size_elements& data0 = data[0];
-        buffer_variable_size_elements& data1 = data[1];
-        ASSERT_EQ(2, data0.size());
-        ASSERT_EQ(2, data1.size());
+        ASSERT_EQ(2, data.elements_per_record());
     }
 
     {
-        variable_buffer_array& data = *loader.next();
-        ASSERT_EQ(2, data.size());
-        buffer_variable_size_elements& data0 = data[0];
-        buffer_variable_size_elements& data1 = data[1];
-        ASSERT_EQ(1, data0.size());
-        ASSERT_EQ(1, data1.size());
+        encoded_record_list& data = *loader.next();
+        ASSERT_EQ(1, data.size());
+        ASSERT_EQ(2, data.elements_per_record());
     }
 }
 
@@ -120,28 +114,29 @@ TEST(block_loader_file, iterate_batch)
     manifest_file manifest(manifest_path, false);
 
     // each call to next() will yield pointer to variable buffer_array
-    //   which is vector of buffer_variable_size_elements
-    block_loader_file_async blf(&manifest, block_size);
-    block_manager_async block_manager(&blf, block_size, "", false);
-    batch_iterator_async biter(&block_manager, batch_size);
+    //   which is vector of encoded_record_list
+    block_loader_file_async block_loader(&manifest, block_size);
+    block_manager_async block_manager(&block_loader, block_size, "", false);
+    batch_iterator_async batch_iterator(&block_manager, batch_size);
 
     auto batch_count = record_count / batch_size;
 
+    uint32_t count = 0;
     for (int batch = 0; batch < batch_count; ++batch)
     {
-        auto b1 = biter.next();
-        ASSERT_NE(nullptr, b1);
-        auto b = *b1;
+        encoded_record_list* b = batch_iterator.next();
+        ASSERT_NE(nullptr, b);
+        ASSERT_EQ(batch_size, b->size());
         for (int item = 0; item < batch_size; ++item)
         {
-            uint* object_data = (uint*)b[0].get_item(item).data();
-            uint* target_data = (uint*)b[1].get_item(item).data();
+            uint* object_data = (uint*)b->record(item).element(0).data();
+            uint* target_data = (uint*)b->record(item).element(1).data();
             for (int offset = 0; offset < object_size / sizeof(uint); offset++)
             {
-                EXPECT_EQ(object_data[offset] + 1, target_data[offset]);
-                // INFO << "batch_iter " << object_data[offset] << " " << offset << ", " << item <<  ", " << batch << ", " << batch_size;
-                EXPECT_EQ(object_data[offset], 2 * (batch * batch_size + item));
+                ASSERT_EQ(object_data[offset] + 1, target_data[offset]);
+                ASSERT_EQ(object_data[offset], 2 * count);
             }
+            count++;
         }
     }
 }

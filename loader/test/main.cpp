@@ -76,25 +76,23 @@ public:
             stringstream ss;
             {
                 cpio::writer writer(ss);
-                variable_buffer_array bin;
-                for (int element_number=0; element_number<m_elements_size_list.size(); element_number++)
-                {
-                    bin.emplace_back();
-                }
+                encoded_record_list record_list;
                 for (int record_number=0; record_number<block_size; record_number++)
                 {
-                     for (int element_number=0; element_number<m_elements_size_list.size(); element_number++)
-                     {
-                         vector<char> data(m_elements_size_list[element_number]);
-                         stringstream ss;
-                         ss << record_number << ":" << element_number;
-                         string id = ss.str();
-                         id.copy(data.data(), id.size());
-                         data[id.size()] = 0;
-                         bin[element_number].add_item(data);
-                     }
+                    encoded_record record;
+                    for (int element_number=0; element_number<m_elements_size_list.size(); element_number++)
+                    {
+                        vector<char> data(m_elements_size_list[element_number]);
+                        stringstream ss;
+                        ss << record_number << ":" << element_number;
+                        string id = ss.str();
+                        id.copy(data.data(), id.size());
+                        data[id.size()] = 0;
+                        record.add_element(data);
+                    }
+                    record_list.add_record(record);
                 }
-                writer.write_all_records(bin);
+                writer.write_all_records(record_list);
             }
 
             string cpio_data = ss.str();

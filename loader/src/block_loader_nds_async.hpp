@@ -52,10 +52,10 @@ public:
         finalize();
     }
 
-    variable_buffer_array* filler() override;
+    encoded_record_list* filler() override;
 
 
-    // source 
+    // source
     std::vector<std::vector<std::string>>* next() override;
     size_t element_count() const override;
     void reset() override;

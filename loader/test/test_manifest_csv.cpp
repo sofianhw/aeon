@@ -268,17 +268,14 @@ TEST(manifest, file_implicit)
 
     for (int i=0; i<2; i++)
     {
-        variable_buffer_array* buffer = bload.filler();
+        encoded_record_list* buffer = bload.filler();
         ASSERT_NE(nullptr, buffer);
-        ASSERT_EQ(2, buffer->size());
-        buffer_variable_size_elements image_data = buffer->at(0);
-        buffer_variable_size_elements target_data = buffer->at(1);
-//        ASSERT_EQ(batch_size, image_data.get_item_count());
-//        ASSERT_EQ(batch_size, target_data.get_item_count());
-        for (int j=0; j<image_data.get_item_count(); j++)
+        ASSERT_EQ(block_size, buffer->size());
+        for (int j=0; j<buffer->size(); j++)
         {
-            auto idata = image_data.get_item(j);
-            auto tdata = target_data.get_item(j);
+            encoded_record record = buffer->record(j);
+            auto idata = record.element(0);
+            auto tdata = record.element(1);
             string target{tdata.data(), tdata.size()};
 //            INFO << target;
 //            int value = stod(target);
@@ -314,17 +311,14 @@ TEST(manifest, file_explicit)
     block_loader_file_async bload{&manifest, block_size};
     for (int i=0; i<2; i++)
     {
-        variable_buffer_array* buffer = bload.filler();
+        encoded_record_list* buffer = bload.filler();
         ASSERT_NE(nullptr, buffer);
-        ASSERT_EQ(2, buffer->size());
-        buffer_variable_size_elements image_data = buffer->at(0);
-        buffer_variable_size_elements target_data = buffer->at(1);
-//        ASSERT_EQ(batch_size, image_data.get_item_count());
-//        ASSERT_EQ(batch_size, target_data.get_item_count());
-        for (int j=0; j<image_data.get_item_count(); j++)
+        ASSERT_EQ(block_size, buffer->size());
+        for (int j=0; j<buffer->size(); j++)
         {
-            auto idata = image_data.get_item(j);
-            auto tdata = target_data.get_item(j);
+            encoded_record record = buffer->record(j);
+            auto idata = record.element(0);
+            auto tdata = record.element(1);
             string target{tdata.data(), tdata.size()};
             int value = stod(target);
             EXPECT_EQ(j%2+1, value);
@@ -372,17 +366,14 @@ TEST(manifest, binary)
     index = 0;
     for (int i=0; i<2; i++)
     {
-        variable_buffer_array* buffer = block_loader.filler();
+        encoded_record_list* buffer = block_loader.filler();
         ASSERT_NE(nullptr, buffer);
-        ASSERT_EQ(2, buffer->size());
-        buffer_variable_size_elements image_data = buffer->at(0);
-        buffer_variable_size_elements target_data = buffer->at(1);
-//        ASSERT_EQ(batch_size, image_data.get_item_count());
-//        ASSERT_EQ(batch_size, target_data.get_item_count());
-        for (int j=0; j<image_data.get_item_count(); j++)
+        ASSERT_EQ(block_size, buffer->size());
+        for (int j=0; j<buffer->size(); j++)
         {
-            auto idata = image_data.get_item(j);
-            auto tdata = target_data.get_item(j);
+            encoded_record record = buffer->record(j);
+            auto idata = record.element(0);
+            auto tdata = record.element(1);
             string str = vector2string(tdata);
             string expected = make_target_data(index);
             index = (index+1) % manifest.record_count();
@@ -423,17 +414,14 @@ TEST(manifest, string)
     index = 0;
     for (int i=0; i<2; i++)
     {
-        variable_buffer_array* buffer = block_loader.filler();
+        encoded_record_list* buffer = block_loader.filler();
         ASSERT_NE(nullptr, buffer);
-        ASSERT_EQ(2, buffer->size());
-        buffer_variable_size_elements image_data = buffer->at(0);
-        buffer_variable_size_elements target_data = buffer->at(1);
-//        ASSERT_EQ(batch_size, image_data.get_item_count());
-//        ASSERT_EQ(batch_size, target_data.get_item_count());
-        for (int j=0; j<image_data.get_item_count(); j++)
+        ASSERT_EQ(block_size, buffer->size());
+        for (int j=0; j<buffer->size(); j++)
         {
-            auto idata = image_data.get_item(j);
-            auto tdata = target_data.get_item(j);
+            encoded_record record = buffer->record(j);
+            auto idata = record.element(0);
+            auto tdata = record.element(1);
             string str = vector2string(tdata);
             string expected = make_target_data(index);
             index = (index+1) % manifest.record_count();

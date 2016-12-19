@@ -145,9 +145,9 @@ manifest_nds::manifest_nds(const std::string& base_url, const std::string& token
     // }
 }
 
-variable_buffer_array* manifest_nds::next()
+encoded_record_list* manifest_nds::next()
 {
-    variable_buffer_array* rc = nullptr;
+    encoded_record_list* rc = nullptr;
     // if (m_counter < m_block_list.size())
     // {
     //     rc = &(m_block_list[m_counter]);
@@ -156,15 +156,11 @@ variable_buffer_array* manifest_nds::next()
     return rc;
 }
 
-variable_buffer_array manifest_nds::load_block(size_t block_index)
+encoded_record_list manifest_nds::load_block(size_t block_index)
 {
     // not much use in mutlithreading here since in most cases, our next step is
     // to shuffle the entire BufferPair, which requires the entire buffer loaded.
-    variable_buffer_array rc;
-    for (size_t i=0; i<m_elements_per_record; i++)
-    {
-        rc.emplace_back();
-    }
+    encoded_record_list rc;
 
     // get data from url and write it into cpio_stream
     stringstream stream;
@@ -173,8 +169,9 @@ variable_buffer_array manifest_nds::load_block(size_t block_index)
     // parse cpio_stream into dest one record (consisting of multiple elements) at a time
     nervana::cpio::reader reader(stream);
     size_t record_count = reader.record_count();
-    for (size_t record=0; record<record_count; record++)
+    for (size_t record_number=0; record_number<record_count; record_number++)
     {
+        encoded_record record;
         for (size_t element=0; element<m_elements_per_record; element++)
         {
             vector<char> buffer;
@@ -183,8 +180,9 @@ variable_buffer_array manifest_nds::load_block(size_t block_index)
             {
                 break;
             }
-            rc[element].add_item(buffer);
+            record.add_element(buffer);
         }
+        rc.add_record(record);
     }
     return rc;
 }

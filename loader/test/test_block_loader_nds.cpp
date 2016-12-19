@@ -193,7 +193,7 @@ TEST(block_loader_nds, cpio)
 //     ASSERT_EQ(dest.size(), 2);
 //     ASSERT_EQ(dest[0]->record_count(), 0);
 
-    variable_buffer_array block = client.load_block(0);
+    encoded_record_list block = client.load_block(0);
 
 //     ASSERT_EQ(dest[0]->record_count(), 2);
 }
