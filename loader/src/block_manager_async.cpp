@@ -150,11 +150,6 @@ nervana::encoded_record_list* block_manager_async::filler()
     return rc;
 }
 
-void block_manager_async::move_src_to_dst(encoded_record_list* src_array_ptr, encoded_record_list* dst_array_ptr, size_t count)
-{
-    dst_array_ptr->swap(*src_array_ptr);
-}
-
 string block_manager_async::create_cache_name(source_uid_t uid)
 {
     stringstream ss;

@@ -69,8 +69,3 @@ encoded_record_list* batch_iterator_async::filler()
 
     return rc;
 }
-
-void batch_iterator_async::move_src_to_dst(encoded_record_list* src_array_ptr, encoded_record_list* dst_array_ptr, size_t count)
-{
-    dst_array_ptr->swap(*src_array_ptr);
-}

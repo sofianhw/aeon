@@ -47,8 +47,6 @@ public:
     }
 
 private:
-    void move_src_to_dst(encoded_record_list* src_array_ptr, encoded_record_list* dst_array_ptr, size_t count);
-
     size_t                 m_batch_size;
     size_t                 m_element_count;
     encoded_record_list* m_input_ptr{nullptr};

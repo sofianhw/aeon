@@ -62,7 +62,6 @@ public:
     }
 
 private:
-    void move_src_to_dst(encoded_record_list* src_array_ptr, encoded_record_list* dst_array_ptr, size_t count);
     static std::string create_cache_name(source_uid_t uid);
     static std::string create_cache_block_name(size_t block_number);
 
