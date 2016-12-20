@@ -87,5 +87,6 @@ private:
     int                        m_cache_lock;
     size_t                     m_cache_hit = 0;
     size_t                     m_cache_miss = 0;
-    std::vector<block_info> m_block_load_sequence;
+    std::vector<size_t>        m_block_load_sequence;
+    std::minstd_rand0          m_rnd;
 };

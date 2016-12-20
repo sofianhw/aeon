@@ -38,7 +38,12 @@ nervana::block_manager_async::block_manager_async(block_loader_source_async* fil
     , m_cache_root{cache_root}
     , m_cache_enabled{m_cache_root.empty() == false}
     , m_shuffle_enabled{enable_shuffle}
+    , m_block_load_sequence{}
+    , m_rnd{get_global_random_seed()}
 {
+    m_block_load_sequence.reserve(m_block_count);
+    m_block_load_sequence.resize(m_block_count);
+    iota(m_block_load_sequence.begin(), m_block_load_sequence.end(), 0);
     if (m_cache_enabled)
     {
         m_source_uid = file_loader->get_uid();
@@ -75,7 +80,7 @@ nervana::encoded_record_list* block_manager_async::filler()
     if (m_cache_enabled)
     {
         // cache path
-        string block_name = create_cache_block_name(m_current_block_number);
+        string block_name = create_cache_block_name(m_block_load_sequence[m_current_block_number]);
         string block_file_path = file_util::path_join(m_cache_dir, block_name);
 
         if (file_util::exists(block_file_path))
@@ -140,6 +145,12 @@ nervana::encoded_record_list* block_manager_async::filler()
         input = m_source->next();
 
         rc->swap(*input);
+    }
+
+    if (m_shuffle_enabled && m_current_block_number == 0)
+    {
+        // This will not trigger on the first pass through the dataset
+        shuffle(m_block_load_sequence.begin(), m_block_load_sequence.end(), m_rnd);
     }
 
     if (rc && rc->size() == 0)

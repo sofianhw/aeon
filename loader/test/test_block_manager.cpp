@@ -252,3 +252,79 @@ TEST(block_manager, reuse_cache)
 
     file_util::remove_directory(cache_root);
 }
+
+TEST(block_manager, no_cache)
+{
+    FAIL();
+}
+
+TEST(block_manager, shuffle_cache)
+{
+    manifest_maker mm;
+
+    string cache_root = file_util::make_temp_directory();
+    size_t record_count    = 12;
+    size_t block_size      = 4;
+    size_t object_size     = 16;
+    size_t target_size     = 16;
+    size_t block_count     = record_count / block_size;
+    bool enable_shuffle = true;
+    ASSERT_EQ(0, record_count % block_size);
+    ASSERT_EQ(0, object_size % sizeof(uint32_t));
+    ASSERT_EQ(0, target_size % sizeof(uint32_t));
+
+    auto manifest_path = mm.tmp_manifest_file(record_count, {object_size, target_size});
+    manifest_file manifest(manifest_path, false, "", 1.0, block_size);
+    block_loader_file_async file_reader(&manifest, block_size);
+    block_manager_async manager(&file_reader, block_size, cache_root, enable_shuffle);
+
+    vector<uint32_t> first_pass;
+    vector<uint32_t> second_pass;
+    for (size_t i=0; i<block_count; i++)
+    {
+        encoded_record_list* buffer = manager.next();
+        ASSERT_NE(nullptr, buffer);
+        ASSERT_EQ(4, buffer->size());
+
+        for (size_t record=0; record<block_size; record++)
+        {
+            auto data0 = (uint32_t*)buffer->record(record).element(0).data();
+            first_pass.push_back(data0[0]);
+        }
+    }
+
+    // second read should be shuffled
+    for (size_t i=0; i<block_count; i++)
+    {
+        encoded_record_list* buffer = manager.next();
+        ASSERT_NE(nullptr, buffer);
+        ASSERT_EQ(4, buffer->size());
+
+        for (size_t record=0; record<block_size; record++)
+        {
+            auto data0 = (uint32_t*)buffer->record(record).element(0).data();
+            second_pass.push_back(data0[0]);
+        }
+    }
+
+    vector<uint32_t> second_pass_sorted = second_pass;
+    sort(second_pass_sorted.begin(), second_pass_sorted.end());
+    ASSERT_EQ(first_pass.size(), second_pass.size());
+
+    bool match = true;
+    for (size_t i=0; i<second_pass.size(); i++)
+    {
+        if (second_pass[i] != second_pass_sorted[i])
+        {
+            match = false;
+        }
+    }
+    EXPECT_FALSE(match);
+
+    file_util::remove_directory(cache_root);
+}
+
+TEST(block_manager, shuffle_no_cache)
+{
+    FAIL();
+}
