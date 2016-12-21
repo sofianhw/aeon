@@ -23,7 +23,7 @@
 #define private public
 
 #include "loader.hpp"
-#include "manifest_maker.hpp"
+#include "manifest_builder.hpp"
 #include "gen_image.hpp"
 
 using namespace std;
@@ -140,7 +140,7 @@ TEST(loader,iterator)
     int width = 32;
     size_t batch_size = 1;
     size_t input_file_count = 10;
-    manifest_maker mm(input_file_count, height, width);
+    manifest_builder mm(input_file_count, height, width);
     string manifest_filename = mm.get_manifest_name();
     nlohmann::json js = {{"type","image,label"},
                          {"manifest_filename", manifest_filename},
@@ -183,7 +183,7 @@ TEST(loader,once)
     int width = 32;
     size_t batch_size = 1;
     size_t input_file_count = 10;
-    manifest_maker mm(input_file_count, height, width);
+    manifest_builder mm(input_file_count, height, width);
     string manifest_filename = mm.get_manifest_name();
     nlohmann::json js = {{"type","image,label"},
                          {"manifest_filename", manifest_filename},
@@ -217,7 +217,7 @@ TEST(loader,count)
     int width = 32;
     size_t batch_size = 1;
     size_t input_file_count = 10;
-    manifest_maker mm(input_file_count, height, width);
+    manifest_builder mm(input_file_count, height, width);
     string manifest_filename = mm.get_manifest_name();
     nlohmann::json js = {{"type","image,label"},
                          {"manifest_filename", manifest_filename},
@@ -255,7 +255,7 @@ TEST(loader,infinite)
     int width = 32;
     size_t batch_size = 1;
     size_t input_file_count = 10;
-    manifest_maker mm(input_file_count, height, width);
+    manifest_builder mm(input_file_count, height, width);
     string manifest_filename = mm.get_manifest_name();
     nlohmann::json js = {{"type","image,label"},
                          {"manifest_filename", manifest_filename},
@@ -295,7 +295,7 @@ TEST(loader,cache)
     size_t input_file_count = 1002;
     size_t block_size = 300;
     string cache_root = file_util::get_temp_directory();
-    manifest_maker mm(input_file_count, height, width);
+    manifest_builder mm(input_file_count, height, width);
     string manifest_filename = mm.get_manifest_name();
     nlohmann::json js = {{"type","image,label"},
                          {"manifest_filename", manifest_filename},
@@ -336,7 +336,7 @@ TEST(loader,test)
     size_t batch_size = 32;
     size_t input_file_count = 1003;
     size_t block_size = 300;
-    manifest_maker mm(input_file_count, height, width);
+    manifest_builder mm(input_file_count, height, width);
     string manifest_filename = mm.get_manifest_name();
     nlohmann::json js = {{"type","image,label"},
                          {"manifest_filename", manifest_filename},

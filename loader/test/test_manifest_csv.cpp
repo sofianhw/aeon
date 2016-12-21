@@ -28,7 +28,7 @@
 
 #include "gtest/gtest.h"
 #include "manifest_file.hpp"
-#include "manifest_maker.hpp"
+#include "manifest_builder.hpp"
 #include "util.hpp"
 #include "file_util.hpp"
 #include "manifest_file.hpp"
@@ -45,7 +45,7 @@ static string test_data_directory = file_util::path_join(string(CURDIR), "test_d
 
 TEST(manifest, constructor)
 {
-    manifest_maker        mm;
+    manifest_builder        mm;
     string                tmpname = mm.tmp_manifest_file(0, {0, 0});
     nervana::manifest_file manifest0(tmpname, false);
 }
@@ -57,7 +57,7 @@ TEST(manifest, no_file)
 
 TEST(manifest, id_eq)
 {
-    manifest_maker        mm;
+    manifest_builder        mm;
     string                tmpname = mm.tmp_manifest_file(0, {0, 0});
     nervana::manifest_file manifest1(tmpname, false);
     nervana::manifest_file manifest2(tmpname, false);
@@ -66,7 +66,7 @@ TEST(manifest, id_eq)
 
 TEST(manifest, id_ne)
 {
-    manifest_maker        mm;
+    manifest_builder        mm;
     nervana::manifest_file manifest1(mm.tmp_manifest_file(0, {0, 0}), false);
     nervana::manifest_file manifest2(mm.tmp_manifest_file(0, {0, 0}), false);
     ASSERT_NE(manifest1.cache_id(), manifest2.cache_id());
@@ -74,7 +74,7 @@ TEST(manifest, id_ne)
 
 TEST(manifest, version_eq)
 {
-    manifest_maker        mm;
+    manifest_builder        mm;
     string                tmpname = mm.tmp_manifest_file(0, {0, 0});
     nervana::manifest_file manifest1(tmpname, false);
     nervana::manifest_file manifest2(tmpname, false);
@@ -83,7 +83,7 @@ TEST(manifest, version_eq)
 
 TEST(manifest, parse_file_doesnt_exist)
 {
-    manifest_maker        mm;
+    manifest_builder        mm;
     string                tmpname = mm.tmp_manifest_file(0, {0, 0});
     nervana::manifest_file manifest0(tmpname, false);
 
@@ -92,7 +92,7 @@ TEST(manifest, parse_file_doesnt_exist)
 
 TEST(manifest, parse_file)
 {
-    manifest_maker mm;
+    manifest_builder mm;
     string         tmpname = mm.tmp_manifest_file(2, {0, 0});
 
     nervana::manifest_file manifest0(tmpname, false);
@@ -101,7 +101,7 @@ TEST(manifest, parse_file)
 
 TEST(manifest, no_shuffle)
 {
-    manifest_maker        mm;
+    manifest_builder        mm;
     string                filename = mm.tmp_manifest_file(20, {4, 4});
     nervana::manifest_file manifest1(filename, false);
     nervana::manifest_file manifest2(filename, false);
@@ -117,7 +117,7 @@ TEST(manifest, no_shuffle)
 
 TEST(manifest, shuffle)
 {
-    manifest_maker        mm;
+    manifest_builder        mm;
     string                filename = mm.tmp_manifest_file(20, {4, 4});
     nervana::manifest_file manifest1(filename, false);
     nervana::manifest_file manifest2(filename, true);
@@ -138,13 +138,13 @@ TEST(manifest, shuffle)
 TEST(manifest, non_paired_manifests)
 {
     {
-        manifest_maker        mm;
+        manifest_builder        mm;
         string                filename = mm.tmp_manifest_file(20, {4, 4, 4});
         nervana::manifest_file manifest1(filename, false);
         ASSERT_EQ(manifest1.record_count(), 20);
     }
     {
-        manifest_maker        mm;
+        manifest_builder        mm;
         string                filename = mm.tmp_manifest_file(20, {4});
         nervana::manifest_file manifest1(filename, false);
         ASSERT_EQ(manifest1.record_count(), 20);
@@ -153,7 +153,7 @@ TEST(manifest, non_paired_manifests)
 
 TEST(manifest, uneven_records)
 {
-    manifest_maker mm;
+    manifest_builder mm;
     string         filename = mm.tmp_manifest_file_with_ragged_fields();
     EXPECT_THROW(nervana::manifest_file manifest1(filename, false), runtime_error);
 }

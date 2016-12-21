@@ -26,7 +26,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-#include "manifest_maker.hpp"
+#include "manifest_builder.hpp"
 #include "manifest_file.hpp"
 #include "file_util.hpp"
 #include "gen_image.hpp"
@@ -34,31 +34,31 @@
 using namespace std;
 using namespace nervana;
 
-manifest_maker::manifest_maker(size_t record_count, std::vector<size_t> sizes)
+manifest_builder::manifest_builder(size_t record_count, std::vector<size_t> sizes)
 {
     manifest_name = tmp_manifest_file(record_count, sizes);
 }
 
-manifest_maker::manifest_maker(size_t record_count, int height, int width)
+manifest_builder::manifest_builder(size_t record_count, int height, int width)
 {
     manifest_name = image_manifest(record_count, height, width);
 }
 
-manifest_maker::manifest_maker()
+manifest_builder::manifest_builder()
 {
 }
 
-manifest_maker::~manifest_maker()
+manifest_builder::~manifest_builder()
 {
     remove_files();
 }
 
-std::string manifest_maker::get_manifest_name()
+std::string manifest_builder::get_manifest_name()
 {
     return manifest_name;
 }
 
-void manifest_maker::remove_files()
+void manifest_builder::remove_files()
 {
     for (auto it : tmp_filenames)
     {
@@ -66,14 +66,14 @@ void manifest_maker::remove_files()
     }
 }
 
-string manifest_maker::tmp_filename(const string& extension)
+string manifest_builder::tmp_filename(const string& extension)
 {
     string tmpname = file_util::tmp_filename(extension);
     tmp_filenames.push_back(tmpname);
     return tmpname;
 }
 
-string manifest_maker::image_manifest(size_t record_count, int height, int width)
+string manifest_builder::image_manifest(size_t record_count, int height, int width)
 {
     string   tmpname = tmp_filename();
     ofstream f_manifest(tmpname);
@@ -99,7 +99,7 @@ string manifest_maker::image_manifest(size_t record_count, int height, int width
     return tmpname;
 }
 
-string manifest_maker::tmp_manifest_file(size_t record_count, vector<size_t> sizes)
+string manifest_builder::tmp_manifest_file(size_t record_count, vector<size_t> sizes)
 {
     string   tmpname = tmp_filename();
     ofstream f(tmpname);
@@ -124,7 +124,7 @@ string manifest_maker::tmp_manifest_file(size_t record_count, vector<size_t> siz
     return tmpname;
 }
 
-string manifest_maker::tmp_file_repeating(size_t size, uint32_t x)
+string manifest_builder::tmp_file_repeating(size_t size, uint32_t x)
 {
     // create a temp file of `size` bytes filled with uint32_t x
     string   tmpname = tmp_filename();
@@ -141,7 +141,7 @@ string manifest_maker::tmp_file_repeating(size_t size, uint32_t x)
     return tmpname;
 }
 
-std::string manifest_maker::tmp_manifest_file_with_invalid_filename()
+std::string manifest_builder::tmp_manifest_file_with_invalid_filename()
 {
     string   tmpname = tmp_filename();
     ofstream f(tmpname);
@@ -156,7 +156,7 @@ std::string manifest_maker::tmp_manifest_file_with_invalid_filename()
     return tmpname;
 }
 
-std::string manifest_maker::tmp_manifest_file_with_ragged_fields()
+std::string manifest_builder::tmp_manifest_file_with_ragged_fields()
 {
     string   tmpname = tmp_filename();
     ofstream f(tmpname);

@@ -18,7 +18,7 @@
 #include "manifest_file.hpp"
 #include "block_loader_file_async.hpp"
 #include "batch_iterator_async.hpp"
-#include "manifest_maker.hpp"
+#include "manifest_builder.hpp"
 #include "file_util.hpp"
 #include "log.hpp"
 
@@ -27,7 +27,7 @@ using namespace nervana;
 
 TEST(block_loader_file, file_block)
 {
-    manifest_maker mm;
+    manifest_builder mm;
 
     // load one block of size 2
     size_t record_count    = 20;
@@ -64,7 +64,7 @@ TEST(block_loader_file, file_block)
 
 TEST(block_loader_file, file_block_odd)
 {
-    manifest_maker mm;
+    manifest_builder mm;
 
     // load one block of size 2
     size_t record_count    = 3;
@@ -99,7 +99,7 @@ TEST(block_loader_file, file_block_odd)
 
 TEST(block_loader_file, iterate_batch)
 {
-    manifest_maker mm;
+    manifest_builder mm;
 
     // load one block of size 2
     size_t record_count    = 100;

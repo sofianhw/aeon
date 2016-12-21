@@ -18,7 +18,7 @@
 #include "gtest/gtest.h"
 #include "file_util.hpp"
 #include "log.hpp"
-#include "manifest_maker.hpp"
+#include "manifest_builder.hpp"
 #include "manifest_file.hpp"
 #include "block_loader_file_async.hpp"
 #include "block_loader_source_async.hpp"
@@ -88,7 +88,7 @@ TEST(block_manager, cache_busy)
 {
     string cache_root = file_util::make_temp_directory();
 
-    manifest_maker mm;
+    manifest_builder mm;
 
     size_t record_count    = 10;
     size_t block_size      = 4;
@@ -117,7 +117,7 @@ TEST(block_manager, build_cache)
 {
     string cache_root = file_util::make_temp_directory();
 
-    manifest_maker mm;
+    manifest_builder mm;
 
     size_t record_count    = 12;
     size_t block_size      = 4;
@@ -178,7 +178,7 @@ TEST(block_manager, reuse_cache)
 {
     string cache_root = file_util::make_temp_directory();
 
-    manifest_maker mm;
+    manifest_builder mm;
 
     size_t record_count    = 12;
     size_t block_size      = 4;
@@ -260,7 +260,7 @@ TEST(block_manager, no_cache)
 
 TEST(block_manager, shuffle_cache)
 {
-    manifest_maker mm;
+    manifest_builder mm;
 
     string cache_root = file_util::make_temp_directory();
     size_t record_count    = 12;

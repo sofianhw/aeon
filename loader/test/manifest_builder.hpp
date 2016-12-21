@@ -18,13 +18,13 @@
 #include <string>
 #include <vector>
 
-class manifest_maker
+class manifest_builder
 {
 public:
-    manifest_maker(size_t record_count, std::vector<size_t> sizes);
-    manifest_maker(size_t record_count, int height, int width);
-    manifest_maker();
-    ~manifest_maker();
+    manifest_builder(size_t record_count, std::vector<size_t> sizes);
+    manifest_builder(size_t record_count, int height, int width);
+    manifest_builder();
+    ~manifest_builder();
 
     std::string get_manifest_name();
 
