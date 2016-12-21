@@ -34,6 +34,6 @@ public:
     static std::string gen_decode_table();
 
 private:
-    static const char* character_codes;
-    static const char  decode_codes[];
+    static const uint8_t character_codes[];
+    static const uint8_t  decode_codes[];
 };

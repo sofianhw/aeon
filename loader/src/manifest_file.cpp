@@ -32,6 +32,12 @@
 using namespace std;
 using namespace nervana;
 
+const string      manifest_file::m_file_type_id = "FILE";
+const string      manifest_file::m_binary_type_id = "BINARY";
+const string      manifest_file::m_string_type_id = "STRING";
+const string      manifest_file::m_ascii_int_type_id = "ASCII_INT";
+const string      manifest_file::m_ascii_float_type_id = "ASCII_FLOAT";
+
 manifest_file::manifest_file(const string& filename, bool shuffle, const string& root,
                            float subset_fraction, size_t block_size)
     : m_source_filename(filename)
@@ -101,23 +107,23 @@ void manifest_file::initialize(std::istream& stream, size_t block_size, bool shu
             vector<string> element_list = split(line, m_delimiter_char);
             for (const string& type : element_list)
             {
-                if (type == "FILE")
+                if (type == get_file_type_id())
                 {
                     m_element_types.push_back(element_t::FILE);
                 }
-                else if (type == "BINARY")
+                else if (type == get_binary_type_id())
                 {
                     m_element_types.push_back(element_t::BINARY);
                 }
-                else if (type == "STRING")
+                else if (type == get_string_type_id())
                 {
                     m_element_types.push_back(element_t::STRING);
                 }
-                else if (type == "ASCII_INT")
+                else if (type == get_ascii_int_type_id())
                 {
                     m_element_types.push_back(element_t::ASCII_INT);
                 }
-                else if (type == "ASCII_FLOAT")
+                else if (type == get_ascii_float_type_id())
                 {
                     m_element_types.push_back(element_t::ASCII_FLOAT);
                 }

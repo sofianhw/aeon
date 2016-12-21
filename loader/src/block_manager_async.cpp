@@ -135,16 +135,15 @@ nervana::encoded_record_list* block_manager_async::filler()
     else
     {
         // The non-cache path
+        input = m_source->next();
+
+        rc->swap(*input);
+
         if (++m_current_block_number == m_block_count)
         {
             m_current_block_number = 0;
             m_file_loader.reset();
-//            m_file_loader.set_block_loader_sequence(m_block_load_sequence);
         }
-
-        input = m_source->next();
-
-        rc->swap(*input);
     }
 
     if (m_shuffle_enabled && m_current_block_number == 0)

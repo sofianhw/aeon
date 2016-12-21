@@ -88,15 +88,15 @@ TEST(block_manager, cache_busy)
 {
     string cache_root = file_util::make_temp_directory();
 
-    manifest_builder mm;
+    manifest_builder mb;
 
     size_t record_count    = 10;
     size_t block_size      = 4;
     size_t object_size     = 16;
     size_t target_size     = 16;
 
-    auto manifest_path = mm.tmp_manifest_file(record_count, {object_size, target_size});
-    manifest_file manifest(manifest_path, false);
+    stringstream& manifest_stream = mb.sizes({object_size, target_size}).record_count(record_count).create();
+    manifest_file manifest(manifest_stream, false);
 
     block_loader_file_async file_reader(&manifest, block_size);
     string cache_name = block_manager_async::create_cache_name(file_reader.get_uid());
@@ -117,7 +117,7 @@ TEST(block_manager, build_cache)
 {
     string cache_root = file_util::make_temp_directory();
 
-    manifest_builder mm;
+    manifest_builder mb;
 
     size_t record_count    = 12;
     size_t block_size      = 4;
@@ -128,8 +128,8 @@ TEST(block_manager, build_cache)
     ASSERT_EQ(0, object_size % sizeof(uint32_t));
     ASSERT_EQ(0, target_size % sizeof(uint32_t));
 
-    auto manifest_path = mm.tmp_manifest_file(record_count, {object_size, target_size});
-    manifest_file manifest(manifest_path, false, "", 1.0, block_size);
+    stringstream& manifest_stream = mb.sizes({object_size, target_size}).record_count(record_count).create();
+    manifest_file manifest(manifest_stream, false, "", 1.0, block_size);
 
     block_loader_file_async file_reader(&manifest, block_size);
     string cache_name = block_manager_async::create_cache_name(file_reader.get_uid());
@@ -137,23 +137,25 @@ TEST(block_manager, build_cache)
 
     block_manager_async manager(&file_reader, block_size, cache_root, false);
 
-    size_t record_index = 0;
+    size_t record_number = 0;
     for (size_t i=0; i<block_count*2; i++)
     {
         encoded_record_list* buffer = manager.next();
         ASSERT_NE(nullptr, buffer);
         ASSERT_EQ(block_size, buffer->size());
 
-        for (size_t record=0; record<block_size; record++)
+        for (size_t i=0; i<block_size; i++)
         {
-            auto data0 = (uint32_t*)buffer->record(record).element(0).data();
-            auto data1 = (uint32_t*)buffer->record(record).element(1).data();
-            for (size_t offset = 0; offset < object_size / sizeof(uint32_t); offset++)
+            const encoded_record& record = buffer->record(i);
+            for (size_t element_number=0; element_number<record.size(); element_number++)
             {
-                EXPECT_EQ(data0[offset] + 1, data1[offset]);
-                EXPECT_EQ(data0[offset], record_index * 2);
+                stringstream ss;
+                ss << record_number << ":" << element_number;
+                string expected = ss.str();
+                string element = vector2string(record.element(element_number));
+                ASSERT_STREQ(expected.c_str(), element.c_str());
             }
-            record_index = (record_index + 1) % record_count;
+            record_number = (record_number + 1) % record_count;
         }
     }
 
@@ -178,7 +180,7 @@ TEST(block_manager, reuse_cache)
 {
     string cache_root = file_util::make_temp_directory();
 
-    manifest_builder mm;
+    manifest_builder mb;
 
     size_t record_count    = 12;
     size_t block_size      = 4;
@@ -189,8 +191,8 @@ TEST(block_manager, reuse_cache)
     ASSERT_EQ(0, object_size % sizeof(uint32_t));
     ASSERT_EQ(0, target_size % sizeof(uint32_t));
 
-    auto manifest_path = mm.tmp_manifest_file(record_count, {object_size, target_size});
-    manifest_file manifest(manifest_path, false, "", 1.0, block_size);
+    stringstream& manifest_stream = mb.sizes({object_size, target_size}).record_count(record_count).create();
+    manifest_file manifest(manifest_stream, false, "", 1.0, block_size);
 
     // first build the cache
     {
@@ -198,23 +200,25 @@ TEST(block_manager, reuse_cache)
 
         block_manager_async manager(&file_reader, block_size, cache_root, false);
 
-        size_t record_index = 0;
+        size_t record_number = 0;
         for (size_t i=0; i<block_count; i++)
         {
             encoded_record_list* buffer = manager.next();
             ASSERT_NE(nullptr, buffer);
             ASSERT_EQ(4, buffer->size());
 
-            for (size_t record=0; record<block_size; record++)
+            for (size_t i=0; i<block_size; i++)
             {
-                auto data0 = (uint32_t*)buffer->record(record).element(0).data();
-                auto data1 = (uint32_t*)buffer->record(record).element(1).data();
-                for (size_t offset = 0; offset < object_size / sizeof(uint32_t); offset++)
+                const encoded_record& record = buffer->record(i);
+                for (size_t element_number=0; element_number<record.size(); element_number++)
                 {
-                    EXPECT_EQ(data0[offset] + 1, data1[offset]);
-                    EXPECT_EQ(data0[offset], record_index * 2);
+                    stringstream ss;
+                    ss << record_number << ":" << element_number;
+                    string expected = ss.str();
+                    string element = vector2string(record.element(element_number));
+                    ASSERT_STREQ(expected.c_str(), element.c_str());
                 }
-                record_index = (record_index + 1) % record_count;
+                record_number = (record_number + 1) % record_count;
             }
         }
         ASSERT_EQ(0, manager.m_cache_hit);
@@ -227,23 +231,25 @@ TEST(block_manager, reuse_cache)
 
         block_manager_async manager(&file_reader, block_size, cache_root, false);
 
-        size_t record_index = 0;
+        size_t record_number = 0;
         for (size_t i=0; i<block_count; i++)
         {
             encoded_record_list* buffer = manager.next();
             ASSERT_NE(nullptr, buffer);
             ASSERT_EQ(4, buffer->size());
 
-            for (size_t record=0; record<block_size; record++)
+            for (size_t i=0; i<block_size; i++)
             {
-                auto data0 = (uint32_t*)buffer->record(record).element(0).data();
-                auto data1 = (uint32_t*)buffer->record(record).element(1).data();
-                for (size_t offset = 0; offset < object_size / sizeof(uint32_t); offset++)
+                const encoded_record& record = buffer->record(i);
+                for (size_t element_number=0; element_number<record.size(); element_number++)
                 {
-                    EXPECT_EQ(data0[offset] + 1, data1[offset]);
-                    EXPECT_EQ(data0[offset], record_index * 2);
+                    stringstream ss;
+                    ss << record_number << ":" << element_number;
+                    string expected = ss.str();
+                    string element = vector2string(record.element(element_number));
+                    ASSERT_STREQ(expected.c_str(), element.c_str());
                 }
-                record_index = (record_index + 1) % record_count;
+                record_number = (record_number + 1) % record_count;
             }
         }
         EXPECT_EQ(block_count, manager.m_cache_hit);
@@ -260,7 +266,7 @@ TEST(block_manager, no_cache)
 
 TEST(block_manager, shuffle_cache)
 {
-    manifest_builder mm;
+    manifest_builder mb;
 
     string cache_root = file_util::make_temp_directory();
     size_t record_count    = 12;
@@ -273,8 +279,8 @@ TEST(block_manager, shuffle_cache)
     ASSERT_EQ(0, object_size % sizeof(uint32_t));
     ASSERT_EQ(0, target_size % sizeof(uint32_t));
 
-    auto manifest_path = mm.tmp_manifest_file(record_count, {object_size, target_size});
-    manifest_file manifest(manifest_path, false, "", 1.0, block_size);
+    stringstream& manifest_stream = mb.sizes({object_size, target_size}).record_count(record_count).create();
+    manifest_file manifest(manifest_stream, false, "", 1.0, block_size);
     block_loader_file_async file_reader(&manifest, block_size);
     block_manager_async manager(&file_reader, block_size, cache_root, enable_shuffle);
 

@@ -46,8 +46,8 @@ static string test_data_directory = file_util::path_join(string(CURDIR), "test_d
 TEST(manifest, constructor)
 {
     manifest_builder        mm;
-    string                tmpname = mm.tmp_manifest_file(0, {0, 0});
-    nervana::manifest_file manifest0(tmpname, false);
+    auto& ms = mm.sizes({0, 0}).record_count(0).create();
+    nervana::manifest_file manifest0(ms, false);
 }
 
 TEST(manifest, no_file)
@@ -58,34 +58,37 @@ TEST(manifest, no_file)
 TEST(manifest, id_eq)
 {
     manifest_builder        mm;
-    string                tmpname = mm.tmp_manifest_file(0, {0, 0});
-    nervana::manifest_file manifest1(tmpname, false);
-    nervana::manifest_file manifest2(tmpname, false);
+    auto& ms = mm.sizes({0, 0}).record_count(0).create();
+    nervana::manifest_file manifest1(ms, false);
+    nervana::manifest_file manifest2(ms, false);
     ASSERT_EQ(manifest1.cache_id(), manifest2.cache_id());
 }
 
 TEST(manifest, id_ne)
 {
-    manifest_builder        mm;
-    nervana::manifest_file manifest1(mm.tmp_manifest_file(0, {0, 0}), false);
-    nervana::manifest_file manifest2(mm.tmp_manifest_file(0, {0, 0}), false);
+    manifest_builder        mm1;
+    manifest_builder        mm2;
+    auto& ms1 = mm1.sizes({0, 0}).record_count(0).create();
+    auto& ms2 = mm2.sizes({0, 0}).record_count(0).create();
+    nervana::manifest_file manifest1(ms1, false);
+    nervana::manifest_file manifest2(ms2, false);
     ASSERT_NE(manifest1.cache_id(), manifest2.cache_id());
 }
 
 TEST(manifest, version_eq)
 {
     manifest_builder        mm;
-    string                tmpname = mm.tmp_manifest_file(0, {0, 0});
-    nervana::manifest_file manifest1(tmpname, false);
-    nervana::manifest_file manifest2(tmpname, false);
+    auto& ms = mm.sizes({0, 0}).record_count(0).create();
+    nervana::manifest_file manifest1(ms, false);
+    nervana::manifest_file manifest2(ms, false);
     ASSERT_EQ(manifest1.version(), manifest2.version());
 }
 
 TEST(manifest, parse_file_doesnt_exist)
 {
     manifest_builder        mm;
-    string                tmpname = mm.tmp_manifest_file(0, {0, 0});
-    nervana::manifest_file manifest0(tmpname, false);
+    auto& ms = mm.sizes({0, 0}).record_count(0).create();
+    nervana::manifest_file manifest0(ms, false);
 
     ASSERT_EQ(manifest0.record_count(), 0);
 }
@@ -93,18 +96,18 @@ TEST(manifest, parse_file_doesnt_exist)
 TEST(manifest, parse_file)
 {
     manifest_builder mm;
-    string         tmpname = mm.tmp_manifest_file(2, {0, 0});
+    auto& ms = mm.sizes({0, 0}).record_count(2).create();
 
-    nervana::manifest_file manifest0(tmpname, false);
+    nervana::manifest_file manifest0(ms, false);
     ASSERT_EQ(manifest0.record_count(), 2);
 }
 
 TEST(manifest, no_shuffle)
 {
     manifest_builder        mm;
-    string                filename = mm.tmp_manifest_file(20, {4, 4});
-    nervana::manifest_file manifest1(filename, false);
-    nervana::manifest_file manifest2(filename, false);
+    auto& ms = mm.sizes({4, 4}).record_count(20).create();
+    nervana::manifest_file manifest1(ms, false);
+    nervana::manifest_file manifest2(ms, false);
 
     ASSERT_EQ(manifest1.record_count(), manifest2.record_count());
     ASSERT_EQ(2, manifest1.element_count());
@@ -118,9 +121,9 @@ TEST(manifest, no_shuffle)
 TEST(manifest, shuffle)
 {
     manifest_builder        mm;
-    string                filename = mm.tmp_manifest_file(20, {4, 4});
-    nervana::manifest_file manifest1(filename, false);
-    nervana::manifest_file manifest2(filename, true);
+    auto& ms = mm.sizes({4, 4}).record_count(20).create();
+    nervana::manifest_file manifest1(ms, false);
+    nervana::manifest_file manifest2(ms, true);
 
     bool different = false;
 
@@ -139,23 +142,16 @@ TEST(manifest, non_paired_manifests)
 {
     {
         manifest_builder        mm;
-        string                filename = mm.tmp_manifest_file(20, {4, 4, 4});
-        nervana::manifest_file manifest1(filename, false);
+        auto& ms = mm.sizes({4, 4, 4}).record_count(20).create();
+        nervana::manifest_file manifest1(ms, false);
         ASSERT_EQ(manifest1.record_count(), 20);
     }
     {
         manifest_builder        mm;
-        string                filename = mm.tmp_manifest_file(20, {4});
-        nervana::manifest_file manifest1(filename, false);
+        auto& ms = mm.sizes({4}).record_count(20).create();
+        nervana::manifest_file manifest1(ms, false);
         ASSERT_EQ(manifest1.record_count(), 20);
     }
-}
-
-TEST(manifest, uneven_records)
-{
-    manifest_builder mm;
-    string         filename = mm.tmp_manifest_file_with_ragged_fields();
-    EXPECT_THROW(nervana::manifest_file manifest1(filename, false), runtime_error);
 }
 
 TEST(manifest, root_path)

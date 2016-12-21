@@ -61,11 +61,21 @@ encoded_record_list* batch_iterator_async::filler()
 
         remainder -= move_count;
 
-        if (remainder > 0)
+        if (remainder > 0 || m_input_ptr->size() == 0)
         {
             m_input_ptr = m_source->next();
         }
     }
+
+//    for (size_t item = 0; item < rc->size(); ++item)
+//    {
+//        const encoded_record& record = rc->record(item);
+//        for (size_t element_number=0; element_number<record.size(); element_number++)
+//        {
+//            std::string element = vector2string(record.element(element_number));
+//            INFO << "got element " << element;
+//        }
+//    }
 
     return rc;
 }

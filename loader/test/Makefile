@@ -49,6 +49,7 @@ TEST_SRCS := \
     test_file_util.cpp \
     test_loader.cpp \
     test_async_manager.cpp \
+    test_base64.cpp \
     # test_cpio_cache.cpp \
     # test_batch_iterator.cpp \
     # test_block_iterator_shuffled.cpp \

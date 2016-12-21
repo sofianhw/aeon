@@ -49,5 +49,5 @@ public:
 private:
     size_t                 m_batch_size;
     size_t                 m_element_count;
-    encoded_record_list* m_input_ptr{nullptr};
+    encoded_record_list*   m_input_ptr{nullptr};
 };

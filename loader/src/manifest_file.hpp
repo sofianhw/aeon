@@ -88,6 +88,22 @@ public:
         return m_delimiter_char;
     }
 
+    static char get_comment_char()
+    {
+        return m_comment_char;
+    }
+
+    static char get_metadata_char()
+    {
+        return m_metadata_char;
+    }
+
+    static const std::string& get_file_type_id() {return m_file_type_id; }
+    static const std::string& get_binary_type_id() {return m_binary_type_id; }
+    static const std::string& get_string_type_id() {return m_string_type_id; }
+    static const std::string& get_ascii_int_type_id() { return m_ascii_int_type_id; }
+    static const std::string& get_ascii_float_type_id() { return m_ascii_float_type_id; }
+
     const std::vector<element_t>& get_element_types() const;
 
     const std::vector<std::string>& operator[](size_t offset) const;
@@ -108,4 +124,10 @@ private:
     static const char      m_comment_char = '#';
     static const char      m_metadata_char = '@';
     std::vector<element_t> m_element_types;
+
+    static const std::string      m_file_type_id;
+    static const std::string      m_binary_type_id;
+    static const std::string      m_string_type_id;
+    static const std::string      m_ascii_int_type_id;
+    static const std::string      m_ascii_float_type_id;
 };

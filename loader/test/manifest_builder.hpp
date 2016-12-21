@@ -17,27 +17,23 @@
 
 #include <string>
 #include <vector>
+#include <sstream>
 
 class manifest_builder
 {
 public:
-    manifest_builder(size_t record_count, std::vector<size_t> sizes);
-    manifest_builder(size_t record_count, int height, int width);
-    manifest_builder();
-    ~manifest_builder();
 
-    std::string get_manifest_name();
+    manifest_builder& record_count(size_t value);
+    manifest_builder& sizes(const std::vector<size_t>& sizes);
+    manifest_builder& image_width(size_t value);
+    manifest_builder& image_height(size_t value);
 
-    std::string tmp_filename(const std::string& extension="");
-    std::string tmp_zero_file(size_t size);
-    std::string tmp_manifest_file(size_t record_count, std::vector<size_t> sizes);
-    std::string image_manifest(size_t record_count, int height, int width);
-    std::string tmp_manifest_file_with_invalid_filename();
-    std::string tmp_manifest_file_with_ragged_fields();
-    std::string tmp_file_repeating(size_t size, uint32_t x);
-    void remove_files();
+    std::stringstream& create();
 
-    std::string manifest_name;
-
-    std::vector<std::string> tmp_filenames;
+private:
+    std::vector<size_t> m_sizes;
+    size_t m_image_width = 0;
+    size_t m_image_height = 0;
+    size_t m_record_count = 0;
+    std::stringstream m_stream;
 };
