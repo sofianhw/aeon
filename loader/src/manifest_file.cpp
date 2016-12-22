@@ -32,16 +32,17 @@
 using namespace std;
 using namespace nervana;
 
-const string      manifest_file::m_file_type_id = "FILE";
-const string      manifest_file::m_binary_type_id = "BINARY";
-const string      manifest_file::m_string_type_id = "STRING";
-const string      manifest_file::m_ascii_int_type_id = "ASCII_INT";
-const string      manifest_file::m_ascii_float_type_id = "ASCII_FLOAT";
+const string manifest_file::m_file_type_id        = "FILE";
+const string manifest_file::m_binary_type_id      = "BINARY";
+const string manifest_file::m_string_type_id      = "STRING";
+const string manifest_file::m_ascii_int_type_id   = "ASCII_INT";
+const string manifest_file::m_ascii_float_type_id = "ASCII_FLOAT";
 
-manifest_file::manifest_file(const string& filename, bool shuffle, const string& root,
-                           float subset_fraction, size_t block_size)
+manifest_file::manifest_file(const string& filename, bool shuffle, const string& root, float subset_fraction, size_t block_size)
     : m_source_filename(filename)
     , m_record_count{0}
+    , m_shuffle{shuffle}
+    , m_rnd{get_global_random_seed()}
 {
     // for now parse the entire manifest on creation
     ifstream infile(m_source_filename);
@@ -51,13 +52,15 @@ manifest_file::manifest_file(const string& filename, bool shuffle, const string&
         throw std::runtime_error("Manifest file " + m_source_filename + " doesn't exist.");
     }
 
-    initialize(infile, block_size, shuffle, root, subset_fraction);
+    initialize(infile, block_size, root, subset_fraction);
 }
 
-manifest_file::manifest_file(std::istream& stream, bool shuffle, const std::string& root,
-                           float subset_fraction, size_t block_size)
+manifest_file::manifest_file(std::istream& stream, bool shuffle, const std::string& root, float subset_fraction, size_t block_size)
+    : m_record_count{0}
+    , m_shuffle{shuffle}
+    , m_rnd{get_global_random_seed()}
 {
-    initialize(stream, block_size, shuffle, root, subset_fraction);
+    initialize(stream, block_size, root, subset_fraction);
 }
 
 string manifest_file::cache_id()
@@ -76,13 +79,13 @@ string manifest_file::version()
     return ss.str();
 }
 
-void manifest_file::initialize(std::istream& stream, size_t block_size, bool shuffle, const std::string& root,
-                              float subset_fraction)
+void manifest_file::initialize(std::istream& stream, size_t block_size, const std::string& root,
+                               float subset_fraction)
 {
     // parse istream is and load the entire thing into m_record_list
-    size_t previous_element_count = 0;
-    size_t line_number = 0;
-    string line;
+    size_t                 previous_element_count = 0;
+    size_t                 line_number            = 0;
+    string                 line;
     vector<vector<string>> record_list;
 
     // read in each line, then from that istringstream, break into
@@ -175,8 +178,7 @@ void manifest_file::initialize(std::istream& stream, size_t block_size, bool shu
                 ss << ", manifest file has a line with differing number of files (";
                 ss << element_list.size() << ") vs (" << previous_element_count << "): ";
 
-                std::copy(element_list.begin(), element_list.end(),
-                          ostream_iterator<std::string>(ss, " "));
+                std::copy(element_list.begin(), element_list.end(), ostream_iterator<std::string>(ss, " "));
                 throw std::runtime_error(ss.str());
             }
             previous_element_count = element_list.size();
@@ -185,14 +187,13 @@ void manifest_file::initialize(std::istream& stream, size_t block_size, bool shu
         }
     }
 
-    if (shuffle)
+    affirm(subset_fraction > 0.0 && subset_fraction <= 1.0, "subset_fraction must be >= 0 and <= 1");
+    generate_subset(record_list, subset_fraction);
+
+    if (m_shuffle)
     {
         std::shuffle(record_list.begin(), record_list.end(), std::mt19937(0));
     }
-
-    affirm(subset_fraction > 0.0 && subset_fraction <= 1.0,
-           "subset_fraction must be >= 0 and <= 1");
-    generate_subset(record_list, subset_fraction);
 
     m_record_count = record_list.size();
 
@@ -201,12 +202,16 @@ void manifest_file::initialize(std::istream& stream, size_t block_size, bool shu
     for (auto info : block_list)
     {
         vector<vector<string>> block;
-        for (int i=info.start(); i<info.end(); i++)
+        for (int i = info.start(); i < info.end(); i++)
         {
             block.push_back(record_list[i]);
         }
         m_block_list.push_back(block);
     }
+
+    m_block_load_sequence.reserve(m_block_list.size());
+    m_block_load_sequence.resize(m_block_list.size());
+    iota(m_block_load_sequence.begin(), m_block_load_sequence.end(), 0);
 }
 
 const std::vector<manifest_file::element_t>& manifest_file::get_element_types() const
@@ -219,7 +224,8 @@ vector<vector<string>>* manifest_file::next()
     vector<vector<string>>* rc = nullptr;
     if (m_counter < m_block_list.size())
     {
-        rc = &(m_block_list[m_counter]);
+        auto load_index = m_block_load_sequence[m_counter];
+        rc = &(m_block_list[load_index]);
         m_counter++;
     }
     return rc;
@@ -227,6 +233,10 @@ vector<vector<string>>* manifest_file::next()
 
 void manifest_file::reset()
 {
+    if (m_shuffle)
+    {
+        shuffle(m_block_load_sequence.begin(), m_block_load_sequence.end(), m_rnd);
+    }
     m_counter = 0;
 }
 
@@ -240,7 +250,7 @@ void manifest_file::generate_subset(vector<vector<string>>& record_list, float s
         vector<record>              tmp;
         tmp.swap(record_list);
         size_t expected_count = tmp.size() * subset_fraction;
-        size_t needed = expected_count;
+        size_t needed         = expected_count;
 
         for (int i = 0; i < tmp.size(); i++)
         {

@@ -69,11 +69,6 @@ public:
         return m_manifest.get_crc();
     }
 
-    void set_block_loader_sequence(const std::vector<std::pair<size_t, size_t>>& seq)
-    {
-        m_manifest.set_block_load_sequence(seq);
-    }
-
 private:
     size_t        m_block_size;
     size_t        m_block_count;

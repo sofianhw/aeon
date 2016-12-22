@@ -332,5 +332,60 @@ TEST(block_manager, shuffle_cache)
 
 TEST(block_manager, shuffle_no_cache)
 {
-    FAIL();
-}
+    manifest_builder mb;
+
+    string cache_root = "";
+    size_t record_count    = 12;
+    size_t block_size      = 4;
+    size_t object_size     = 16;
+    size_t target_size     = 16;
+    size_t block_count     = record_count / block_size;
+    bool enable_shuffle = true;
+    ASSERT_EQ(0, record_count % block_size);
+    ASSERT_EQ(0, object_size % sizeof(uint32_t));
+    ASSERT_EQ(0, target_size % sizeof(uint32_t));
+
+    vector<size_t> sorted_record_list(record_count);
+    iota(sorted_record_list.begin(), sorted_record_list.end(), 0);
+
+    stringstream& manifest_stream = mb.sizes({object_size, target_size}).record_count(record_count).create();
+    manifest_file manifest(manifest_stream, enable_shuffle, "", 1.0, block_size);
+    block_loader_file_async file_reader(&manifest, block_size);
+    block_manager_async manager(&file_reader, block_size, cache_root, enable_shuffle);
+
+    vector<size_t> first_pass;
+    vector<size_t> second_pass;
+    for (size_t i=0; i<block_count; i++)
+    {
+        encoded_record_list* buffer = manager.next();
+        ASSERT_NE(nullptr, buffer);
+        ASSERT_EQ(4, buffer->size());
+
+        for (size_t record=0; record<block_size; record++)
+        {
+            string data0 = vector2string(buffer->record(record).element(0));
+            size_t value = stod(split(data0, ':')[0]);
+            first_pass.push_back(value);
+        }
+    }
+//    EXPECT_TRUE(is_permutation(first_pass.begin(), first_pass.end(), sorted_record_list.begin()));
+//    EXPECT_FALSE(equal(first_pass.begin(), first_pass.end(), sorted_record_list.begin()));
+
+    // second read should be shuffled
+    for (size_t i=0; i<block_count; i++)
+    {
+        encoded_record_list* buffer = manager.next();
+        ASSERT_NE(nullptr, buffer);
+        ASSERT_EQ(4, buffer->size());
+
+        for (size_t record=0; record<block_size; record++)
+        {
+            string data0 = vector2string(buffer->record(record).element(0));
+            size_t value = stod(split(data0, ':')[0]);
+            second_pass.push_back(value);
+        }
+    }
+    EXPECT_TRUE(is_permutation(second_pass.begin(), second_pass.end(), sorted_record_list.begin()));
+    EXPECT_TRUE(is_permutation(second_pass.begin(), second_pass.end(), first_pass.begin()));
+    EXPECT_FALSE(equal(second_pass.begin(), second_pass.end(), first_pass.begin()));
+    EXPECT_FALSE(equal(second_pass.begin(), second_pass.end(), sorted_record_list.begin()));}

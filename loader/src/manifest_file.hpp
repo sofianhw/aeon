@@ -43,91 +43,63 @@ namespace nervana
     class manifest_file;
 }
 
-class nervana::manifest_file : public nervana::async_manager_source<std::vector<std::vector<std::string>>>,
-                              public nervana::manifest
+class nervana::manifest_file : public nervana::async_manager_source<std::vector<std::vector<std::string>>>, public nervana::manifest
 {
 public:
-    manifest_file(const std::string& filename, bool shuffle, const std::string& root = "",
-                 float subset_fraction = 1.0, size_t block_size=5000);
+    manifest_file(const std::string& filename, bool shuffle, const std::string& root = "", float subset_fraction = 1.0,
+                  size_t block_size = 5000);
 
-    manifest_file(std::istream& stream, bool shuffle, const std::string& root = "",
-                 float subset_fraction = 1.0, size_t block_size=5000);
+    manifest_file(std::istream& stream, bool shuffle, const std::string& root = "", float subset_fraction = 1.0,
+                  size_t block_size = 5000);
 
-    virtual ~manifest_file()
-    {
-    }
-
+    virtual ~manifest_file() {}
     typedef std::vector<std::string> record;
 
     std::string cache_id();
     std::string version();
 
     std::vector<std::vector<std::string>>* next() override;
-    void reset() override;
+    void                                   reset() override;
 
-    size_t block_count() const
-    {
-        return m_block_list.size();
-    }
-
-    size_t record_count() const override
-    {
-        return m_record_count;
-    }
-
-    size_t element_count() const override
-    {
-        return m_element_types.size();
-    }
-
+    size_t block_count() const { return m_block_list.size(); }
+    size_t record_count() const override { return m_record_count; }
+    size_t element_count() const override { return m_element_types.size(); }
     void generate_subset(std::vector<std::vector<std::string>>&, float subset_fraction);
     uint32_t get_crc();
 
-    static char get_delimiter()
-    {
-        return m_delimiter_char;
-    }
-
-    static char get_comment_char()
-    {
-        return m_comment_char;
-    }
-
-    static char get_metadata_char()
-    {
-        return m_metadata_char;
-    }
-
-    static const std::string& get_file_type_id() {return m_file_type_id; }
-    static const std::string& get_binary_type_id() {return m_binary_type_id; }
-    static const std::string& get_string_type_id() {return m_string_type_id; }
-    static const std::string& get_ascii_int_type_id() { return m_ascii_int_type_id; }
-    static const std::string& get_ascii_float_type_id() { return m_ascii_float_type_id; }
-
+    static char                   get_delimiter() { return m_delimiter_char; }
+    static char                   get_comment_char() { return m_comment_char; }
+    static char                   get_metadata_char() { return m_metadata_char; }
+    static const std::string&     get_file_type_id() { return m_file_type_id; }
+    static const std::string&     get_binary_type_id() { return m_binary_type_id; }
+    static const std::string&     get_string_type_id() { return m_string_type_id; }
+    static const std::string&     get_ascii_int_type_id() { return m_ascii_int_type_id; }
+    static const std::string&     get_ascii_float_type_id() { return m_ascii_float_type_id; }
     const std::vector<element_t>& get_element_types() const;
 
     const std::vector<std::string>& operator[](size_t offset) const;
 
 protected:
-    void initialize(std::istream& stream, size_t block_size, bool shuffle, const std::string& root,
-                    float subset_fraction);
+    void initialize(std::istream& stream, size_t block_size, const std::string& root, float subset_fraction);
 
 private:
-    const std::string      m_source_filename;
-    std::vector<std::vector<record>>    m_block_list;
-    CryptoPP::CRC32C       m_crc_engine;
-    bool                   m_crc_computed = false;
-    uint32_t               m_computed_crc;
-    size_t                 m_counter{0};
-    size_t                 m_record_count;
-    static const char      m_delimiter_char = '\t';
-    static const char      m_comment_char = '#';
-    static const char      m_metadata_char = '@';
-    std::vector<element_t> m_element_types;
-
-    static const std::string      m_file_type_id;
-    static const std::string      m_binary_type_id;
-    static const std::string      m_string_type_id;
-    static const std::string      m_ascii_int_type_id;
-    static const std::string      m_ascii_float_type_id;
+    const std::string                m_source_filename;
+    std::vector<std::vector<record>> m_block_list;
+    CryptoPP::CRC32C                 m_crc_engine;
+    bool                             m_crc_computed = false;
+    uint32_t                         m_computed_crc;
+    size_t                           m_counter{0};
+    size_t                           m_record_count;
+    static const char                m_delimiter_char = '\t';
+    static const char                m_comment_char   = '#';
+    static const char                m_metadata_char  = '@';
+    std::vector<element_t>           m_element_types;
+    std::vector<size_t>              m_block_load_sequence;
+    bool                             m_shuffle;
+    std::minstd_rand0                m_rnd;
+    static const std::string         m_file_type_id;
+    static const std::string         m_binary_type_id;
+    static const std::string         m_string_type_id;
+    static const std::string         m_ascii_int_type_id;
+    static const std::string         m_ascii_float_type_id;
 };
