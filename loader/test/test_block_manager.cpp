@@ -259,9 +259,128 @@ TEST(block_manager, reuse_cache)
     file_util::remove_directory(cache_root);
 }
 
-TEST(block_manager, no_cache)
+TEST(block_manager, no_shuffle_cache)
 {
-    FAIL();
+    manifest_builder mb;
+
+    string cache_root = file_util::make_temp_directory();
+    size_t record_count    = 12;
+    size_t block_size      = 4;
+    size_t object_size     = 16;
+    size_t target_size     = 16;
+    size_t block_count     = record_count / block_size;
+    bool enable_shuffle = false;
+    ASSERT_EQ(0, record_count % block_size);
+    ASSERT_EQ(0, object_size % sizeof(uint32_t));
+    ASSERT_EQ(0, target_size % sizeof(uint32_t));
+
+    vector<size_t> sorted_record_list(record_count);
+    iota(sorted_record_list.begin(), sorted_record_list.end(), 0);
+
+    stringstream& manifest_stream = mb.sizes({object_size, target_size}).record_count(record_count).create();
+    manifest_file manifest(manifest_stream, enable_shuffle, "", 1.0, block_size);
+    block_loader_file_async file_reader(&manifest, block_size);
+    block_manager_async manager(&file_reader, block_size, cache_root, enable_shuffle);
+
+    vector<size_t> first_pass;
+    vector<size_t> second_pass;
+    for (size_t i=0; i<block_count; i++)
+    {
+        encoded_record_list* buffer = manager.next();
+        ASSERT_NE(nullptr, buffer);
+        ASSERT_EQ(4, buffer->size());
+
+        for (size_t record=0; record<block_size; record++)
+        {
+            string data0 = vector2string(buffer->record(record).element(0));
+            size_t value = stod(split(data0, ':')[0]);
+            first_pass.push_back(value);
+        }
+    }
+    EXPECT_TRUE(is_permutation(first_pass.begin(), first_pass.end(), sorted_record_list.begin()));
+    EXPECT_TRUE(equal(first_pass.begin(), first_pass.end(), sorted_record_list.begin()));
+
+    // second read should be shuffled
+    for (size_t i=0; i<block_count; i++)
+    {
+        encoded_record_list* buffer = manager.next();
+        ASSERT_NE(nullptr, buffer);
+        ASSERT_EQ(4, buffer->size());
+
+        for (size_t record=0; record<block_size; record++)
+        {
+            string data0 = vector2string(buffer->record(record).element(0));
+            size_t value = stod(split(data0, ':')[0]);
+            second_pass.push_back(value);
+        }
+    }
+    EXPECT_TRUE(is_permutation(second_pass.begin(), second_pass.end(), sorted_record_list.begin()));
+    EXPECT_TRUE(is_permutation(second_pass.begin(), second_pass.end(), first_pass.begin()));
+    EXPECT_TRUE(equal(second_pass.begin(), second_pass.end(), first_pass.begin()));
+    EXPECT_TRUE(equal(second_pass.begin(), second_pass.end(), sorted_record_list.begin()));
+
+    file_util::remove_directory(cache_root);
+}
+
+TEST(block_manager, no_shuffle_no_cache)
+{
+    manifest_builder mb;
+
+    string cache_root = "";
+    size_t record_count    = 12;
+    size_t block_size      = 4;
+    size_t object_size     = 16;
+    size_t target_size     = 16;
+    size_t block_count     = record_count / block_size;
+    bool enable_shuffle = false;
+    ASSERT_EQ(0, record_count % block_size);
+    ASSERT_EQ(0, object_size % sizeof(uint32_t));
+    ASSERT_EQ(0, target_size % sizeof(uint32_t));
+
+    vector<size_t> sorted_record_list(record_count);
+    iota(sorted_record_list.begin(), sorted_record_list.end(), 0);
+
+    stringstream& manifest_stream = mb.sizes({object_size, target_size}).record_count(record_count).create();
+    manifest_file manifest(manifest_stream, enable_shuffle, "", 1.0, block_size);
+    block_loader_file_async file_reader(&manifest, block_size);
+    block_manager_async manager(&file_reader, block_size, cache_root, enable_shuffle);
+
+    vector<size_t> first_pass;
+    vector<size_t> second_pass;
+    for (size_t i=0; i<block_count; i++)
+    {
+        encoded_record_list* buffer = manager.next();
+        ASSERT_NE(nullptr, buffer);
+        ASSERT_EQ(4, buffer->size());
+
+        for (size_t record=0; record<block_size; record++)
+        {
+            string data0 = vector2string(buffer->record(record).element(0));
+            size_t value = stod(split(data0, ':')[0]);
+            first_pass.push_back(value);
+        }
+    }
+    EXPECT_TRUE(is_permutation(first_pass.begin(), first_pass.end(), sorted_record_list.begin()));
+    EXPECT_TRUE(equal(first_pass.begin(), first_pass.end(), sorted_record_list.begin()));
+
+    // second read should be shuffled
+    for (size_t i=0; i<block_count; i++)
+    {
+        encoded_record_list* buffer = manager.next();
+        ASSERT_NE(nullptr, buffer);
+        ASSERT_EQ(4, buffer->size());
+
+        for (size_t record=0; record<block_size; record++)
+        {
+            string data0 = vector2string(buffer->record(record).element(0));
+            size_t value = stod(split(data0, ':')[0]);
+            second_pass.push_back(value);
+        }
+    }
+    EXPECT_TRUE(is_permutation(second_pass.begin(), second_pass.end(), sorted_record_list.begin()));
+    EXPECT_TRUE(is_permutation(second_pass.begin(), second_pass.end(), first_pass.begin()));
+    EXPECT_TRUE(equal(second_pass.begin(), second_pass.end(), first_pass.begin()));
+    EXPECT_TRUE(equal(second_pass.begin(), second_pass.end(), sorted_record_list.begin()));
 }
 
 TEST(block_manager, shuffle_cache)
@@ -279,13 +398,16 @@ TEST(block_manager, shuffle_cache)
     ASSERT_EQ(0, object_size % sizeof(uint32_t));
     ASSERT_EQ(0, target_size % sizeof(uint32_t));
 
+    vector<size_t> sorted_record_list(record_count);
+    iota(sorted_record_list.begin(), sorted_record_list.end(), 0);
+
     stringstream& manifest_stream = mb.sizes({object_size, target_size}).record_count(record_count).create();
-    manifest_file manifest(manifest_stream, false, "", 1.0, block_size);
+    manifest_file manifest(manifest_stream, enable_shuffle, "", 1.0, block_size);
     block_loader_file_async file_reader(&manifest, block_size);
     block_manager_async manager(&file_reader, block_size, cache_root, enable_shuffle);
 
-    vector<uint32_t> first_pass;
-    vector<uint32_t> second_pass;
+    vector<size_t> first_pass;
+    vector<size_t> second_pass;
     for (size_t i=0; i<block_count; i++)
     {
         encoded_record_list* buffer = manager.next();
@@ -294,10 +416,13 @@ TEST(block_manager, shuffle_cache)
 
         for (size_t record=0; record<block_size; record++)
         {
-            auto data0 = (uint32_t*)buffer->record(record).element(0).data();
-            first_pass.push_back(data0[0]);
+            string data0 = vector2string(buffer->record(record).element(0));
+            size_t value = stod(split(data0, ':')[0]);
+            first_pass.push_back(value);
         }
     }
+    EXPECT_TRUE(is_permutation(first_pass.begin(), first_pass.end(), sorted_record_list.begin()));
+    EXPECT_FALSE(equal(first_pass.begin(), first_pass.end(), sorted_record_list.begin()));
 
     // second read should be shuffled
     for (size_t i=0; i<block_count; i++)
@@ -308,24 +433,15 @@ TEST(block_manager, shuffle_cache)
 
         for (size_t record=0; record<block_size; record++)
         {
-            auto data0 = (uint32_t*)buffer->record(record).element(0).data();
-            second_pass.push_back(data0[0]);
+            string data0 = vector2string(buffer->record(record).element(0));
+            size_t value = stod(split(data0, ':')[0]);
+            second_pass.push_back(value);
         }
     }
-
-    vector<uint32_t> second_pass_sorted = second_pass;
-    sort(second_pass_sorted.begin(), second_pass_sorted.end());
-    ASSERT_EQ(first_pass.size(), second_pass.size());
-
-    bool match = true;
-    for (size_t i=0; i<second_pass.size(); i++)
-    {
-        if (second_pass[i] != second_pass_sorted[i])
-        {
-            match = false;
-        }
-    }
-    EXPECT_FALSE(match);
+    EXPECT_TRUE(is_permutation(second_pass.begin(), second_pass.end(), sorted_record_list.begin()));
+    EXPECT_TRUE(is_permutation(second_pass.begin(), second_pass.end(), first_pass.begin()));
+    EXPECT_FALSE(equal(second_pass.begin(), second_pass.end(), first_pass.begin()));
+    EXPECT_FALSE(equal(second_pass.begin(), second_pass.end(), sorted_record_list.begin()));
 
     file_util::remove_directory(cache_root);
 }
@@ -368,8 +484,8 @@ TEST(block_manager, shuffle_no_cache)
             first_pass.push_back(value);
         }
     }
-//    EXPECT_TRUE(is_permutation(first_pass.begin(), first_pass.end(), sorted_record_list.begin()));
-//    EXPECT_FALSE(equal(first_pass.begin(), first_pass.end(), sorted_record_list.begin()));
+    EXPECT_TRUE(is_permutation(first_pass.begin(), first_pass.end(), sorted_record_list.begin()));
+    EXPECT_FALSE(equal(first_pass.begin(), first_pass.end(), sorted_record_list.begin()));
 
     // second read should be shuffled
     for (size_t i=0; i<block_count; i++)
@@ -388,4 +504,5 @@ TEST(block_manager, shuffle_no_cache)
     EXPECT_TRUE(is_permutation(second_pass.begin(), second_pass.end(), sorted_record_list.begin()));
     EXPECT_TRUE(is_permutation(second_pass.begin(), second_pass.end(), first_pass.begin()));
     EXPECT_FALSE(equal(second_pass.begin(), second_pass.end(), first_pass.begin()));
-    EXPECT_FALSE(equal(second_pass.begin(), second_pass.end(), sorted_record_list.begin()));}
+    EXPECT_FALSE(equal(second_pass.begin(), second_pass.end(), sorted_record_list.begin()));
+}
