@@ -55,26 +55,6 @@ TEST(manifest, no_file)
     ASSERT_THROW(nervana::manifest_file manifest0("/tmp/jsdkfjsjkfdjaskdfj_doesnt_exist", false), std::runtime_error);
 }
 
-TEST(manifest, id_eq)
-{
-    manifest_builder        mm;
-    auto& ms = mm.sizes({0, 0}).record_count(0).create();
-    nervana::manifest_file manifest1(ms, false);
-    nervana::manifest_file manifest2(ms, false);
-    ASSERT_EQ(manifest1.cache_id(), manifest2.cache_id());
-}
-
-TEST(manifest, id_ne)
-{
-    manifest_builder        mm1;
-    manifest_builder        mm2;
-    auto& ms1 = mm1.sizes({0, 0}).record_count(0).create();
-    auto& ms2 = mm2.sizes({0, 0}).record_count(0).create();
-    nervana::manifest_file manifest1(ms1, false);
-    nervana::manifest_file manifest2(ms2, false);
-    ASSERT_NE(manifest1.cache_id(), manifest2.cache_id());
-}
-
 TEST(manifest, version_eq)
 {
     manifest_builder        mm;
@@ -104,10 +84,13 @@ TEST(manifest, parse_file)
 
 TEST(manifest, no_shuffle)
 {
-    manifest_builder        mm;
-    auto& ms = mm.sizes({4, 4}).record_count(20).create();
-    nervana::manifest_file manifest1(ms, false);
-    nervana::manifest_file manifest2(ms, false);
+    manifest_builder        mm1;
+    auto& ms1 = mm1.sizes({4, 4}).record_count(20).create();
+    nervana::manifest_file manifest1(ms1, false);
+
+    manifest_builder        mm2;
+    auto& ms2 = mm2.sizes({4, 4}).record_count(20).create();
+    nervana::manifest_file manifest2(ms2, false);
 
     ASSERT_EQ(manifest1.record_count(), manifest2.record_count());
     ASSERT_EQ(2, manifest1.element_count());
@@ -120,10 +103,13 @@ TEST(manifest, no_shuffle)
 
 TEST(manifest, shuffle)
 {
-    manifest_builder        mm;
-    auto& ms = mm.sizes({4, 4}).record_count(20).create();
-    nervana::manifest_file manifest1(ms, false);
-    nervana::manifest_file manifest2(ms, true);
+    manifest_builder        mm1;
+    auto& ms1 = mm1.sizes({4, 4}).record_count(20).create();
+    nervana::manifest_file manifest1(ms1, false);
+
+    manifest_builder        mm2;
+    auto& ms2 = mm2.sizes({4, 4}).record_count(20).create();
+    nervana::manifest_file manifest2(ms2, true);
 
     bool different = false;
 
